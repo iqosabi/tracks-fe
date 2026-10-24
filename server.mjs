@@ -1,10 +1,12 @@
 import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
+import {publicConfigScript} from './public-config.mjs';
 const root=resolve(process.cwd());
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png'};
 http.createServer(async(req,res)=>{
   try {
+    if(new URL(req.url,'http://localhost').pathname==='/runtime-config.js'){res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}).end(await publicConfigScript());return;}
     const path=resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));
     if(path!==root&&!path.startsWith(root+sep))throw Error();
     const target=path===root?resolve(root,'index.html'):path;

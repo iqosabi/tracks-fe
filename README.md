@@ -76,3 +76,21 @@ Form CRUD mengirim JSON dengan field yang ada di contoh request collection. Pili
 Status tiket yang dicontohkan collection adalah OPEN dan IN_PROGRESS; validitas nilai status lain serta persyaratan body wajib/opsional perlu dikonfirmasi dengan skema OpenAPI backend. Kesalahan validasi 400 dan konflik 409 ditampilkan di form; UI tidak mengulang request mutasi akibat network error. Profil menggunakan /auth/me; logout dan logout-all tetap melalui client auth yang terkoordinasi.
 
 Pemeriksaan peta dan seluruh aksi CMS menggunakan tile dan API mock. Pengujian tidak menyentuh data backend staging. Akses server asli, CORS/cookie, bentuk respons staging, dan akses tile CARTO dari jaringan pengguna belum terverifikasi.
+
+## Navigasi dan tabel bersama
+
+Menu sidebar dikelompokkan menjadi parent Monitoring, Data & operasional, dan Administrasi. Setiap parent bisa dibuka/tutup secara independen. Tombol burger/close sidebar menyembunyikan seluruh sidebar di desktop, sehingga header menampilkan logo AMJ dan tombol pembuka. Di mobile, sidebar tetap drawer dengan backdrop. Preferensi collapse dan grup disimpan lokal di browser, tanpa memuat data sesi.
+
+Semua tabel memakai `src/data-table.js`: pencarian, pilihan 10/25/50/100 baris, nomor baris, informasi rentang hasil, dan tombol nomor halaman. Nomor baris remote memakai offset `(page - 1) * limit`, sedangkan nomor lokal mengikuti hasil filter. Indeks aksi tetap mengarah ke record asli setelah search/pagination. Detail bus dan tabel demo juga memakai komponen yang sama.
+
+List endpoint dengan dukungan page/limit menggunakan pagination server. Search server memakai `q` hanya pada endpoint yang mendokumentasikannya (armada, master bus/rute/perangkat, operator, audit, dan list ownership). Untuk endpoint paginated yang tidak mendokumentasikan `q`, pencarian diberi label **Cari di halaman ini** dan memfilter hanya halaman yang sudah diterima. Users, riwayat GPS, perbandingan operator, dan alerts dipaginasi/dicari lokal dari respons yang diterima. Alerts dan history tetap mengikuti batas hasil backend; tidak diklaim mencakup seluruh database. Tidak ada query tambahan yang ditebak.
+
+Filter disusun dalam grid yang sama, dengan kontrol setinggi 41px serta tombol Reset/Terapkan filter. Pencarian pilihan perangkat/bus/operator berada dalam popover pada ikon pencarian di samping select, sehingga tidak membuat tinggi field berbeda. Aksi tabel memakai button berborder; hapus/nonaktifkan tetap memiliki konfirmasi.
+
+## CARTO Basemaps key
+
+CARTO mendokumentasikan key basemap pada parameter `?key=` URL tile. Sumber: https://github.com/CartoDB/basemap-styles. Nilai key pengguna tidak ditaruh pada source atau commit.
+
+Untuk development, salin `.env.example` menjadi `.env.local` lalu isi `CARTO_API_KEY`. File `.env.local` diabaikan Git. Server dev mengirim public basemap config melalui `/runtime-config.js`; build menulis konfigurasi yang sama ke `dist/runtime-config.js` (dist juga diabaikan Git). Untuk hosting statis, isi env saat build dan jalankan ulang build jika key diganti. Runtime config ini khusus key basemap yang memang dipakai browser untuk tile, bukan secret admin CARTO atau access token CMS.
+
+Alternatif per browser: buka **Pengaturan → Peta CARTO**, masukkan key, lalu simpan. Key basemap ini disimpan lokal pada browser dan mengoverride runtime config. Tombol **Gunakan key runtime** menghapus override lokal. Field tidak mengisi ulang key yang sudah tersimpan. Token autentikasi CMS tetap hanya di memori dan terpisah dari konfigurasi basemap.
