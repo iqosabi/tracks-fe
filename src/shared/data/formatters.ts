@@ -1,0 +1,101 @@
+export type ValueFormat =
+  | 'text'
+  | 'bytes'
+  | 'date'
+  | 'boolean'
+  | 'status'
+  | 'number'
+  | 'ms'
+  | 'seconds'
+  | 'coordinate'
+  | 'speed'
+  | 'percent'
+  | 'meters';
+export const number = (v: unknown, digits = 0): string => {
+  if (v === null || v === undefined || v === '') return '—';
+  if (typeof v === 'bigint') return v.toLocaleString('id-ID');
+  if (typeof v === 'string' && /^-?\d+$/.test(v)) return BigInt(v).toLocaleString('id-ID');
+  const n = Number(v);
+  return Number.isFinite(n) ? n.toLocaleString('id-ID', { maximumFractionDigits: digits }) : '—';
+};
+export function bytes(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '—';
+  let n;
+  try {
+    if (typeof value === 'number' && (!Number.isSafeInteger(value) || value < 0)) return '—';
+    if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'bigint')
+      return '—';
+    n = BigInt(value);
+  } catch {
+    return '—';
+  }
+  if (n < 0n) return '—';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB'];
+  let divisor = 1n,
+    index = 0;
+  while (n >= divisor * 1024n && index < units.length - 1) {
+    divisor *= 1024n;
+    index++;
+  }
+  if (!index) return number(n) + ' B';
+  const hundredths = (n * 100n + divisor / 2n) / divisor;
+  const fraction = String(hundredths % 100n)
+    .padStart(2, '0')
+    .replace(/0+$/, '');
+  return number(hundredths / 100n) + (fraction ? ',' + fraction : '') + ' ' + units[index];
+}
+export function date(value: unknown): string {
+  if (!value) return '—';
+  if (typeof value !== 'string' && typeof value !== 'number' && !(value instanceof Date))
+    return '—';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime())
+    ? '—'
+    : new Intl.DateTimeFormat('id-ID', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Jakarta',
+      }).format(d) + ' WIB';
+}
+const statuses: Record<string, string> = {
+  ACTIVE: 'Beroperasi',
+  IDLE: 'Berhenti',
+  DELAYED: 'Terlambat',
+  OFFLINE: 'Offline',
+  OVERSPEED: 'Melebihi batas',
+  OPEN: 'Terbuka',
+  IN_PROGRESS: 'Ditangani',
+  RESOLVED: 'Selesai',
+  CLOSED: 'Ditutup',
+  SUPER_ADMIN: 'Super admin',
+  OPERATOR_ADMIN: 'Admin operator',
+  OPERATOR_VIEWER: 'Viewer operator',
+  true: 'Aktif',
+  false: 'Nonaktif',
+  OK: 'Normal',
+  UP: 'Terhubung',
+  READY: 'Siap',
+  HEALTHY: 'Sehat',
+  DOWN: 'Gangguan',
+};
+export const statusText = (value: unknown): string =>
+  statuses[String(value)] || String(value ?? '—').replaceAll('_', ' ');
+export function format(value: unknown, type: ValueFormat = 'text'): string {
+  if (value === null || value === undefined || value === '') return '—';
+  if (type === 'bytes') return bytes(value);
+  if (type === 'date') return date(value);
+  if (type === 'boolean') return value === true ? 'Aktif' : value === false ? 'Nonaktif' : '—';
+  if (type === 'status') return statusText(value);
+  if (type === 'number') return number(value);
+  if (type === 'ms') return number(Number(value) / 1000, 2) + ' dtk';
+  if (type === 'seconds') return number(value, 2) + ' dtk';
+  if (type === 'coordinate') return number(value, 6);
+  if (type === 'speed') return number(value, 1) + ' km/j';
+  if (type === 'percent') return number(value, 1) + '%';
+  if (type === 'meters') return number(value, 1) + ' m';
+  if (typeof value === 'number' || typeof value === 'bigint') return number(value, 2);
+  return typeof value === 'object' ? '—' : String(value);
+}

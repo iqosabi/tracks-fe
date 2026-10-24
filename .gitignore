@@ -3,3 +3,7 @@ node_modules/
 .env*
 !.env.example
 *.log
+coverage/
+playwright-report/
+test-results/
+build-server/

@@ -1,0 +1,174 @@
+[
+  {
+    "method": "GET",
+    "path": "/health/live"
+  },
+  {
+    "method": "GET",
+    "path": "/health/ready"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/login"
+  },
+  {
+    "method": "GET",
+    "path": "/auth/me"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/refresh"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/logout"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/logout-all"
+  },
+  {
+    "method": "GET",
+    "path": "/monitoring/summary"
+  },
+  {
+    "method": "GET",
+    "path": "/monitoring/operators/summary"
+  },
+  {
+    "method": "GET",
+    "path": "/monitoring/vehicles"
+  },
+  {
+    "method": "GET",
+    "path": "/monitoring/alerts"
+  },
+  {
+    "method": "GET",
+    "path": "/monitoring/vehicles/{{deviceId}}/history"
+  },
+  {
+    "method": "GET",
+    "path": "/monitoring/usage"
+  },
+  {
+    "method": "GET",
+    "path": "/monitoring/usage/summary"
+  },
+  {
+    "method": "GET",
+    "path": "/cms/operators"
+  },
+  {
+    "method": "POST",
+    "path": "/cms/operators"
+  },
+  {
+    "method": "PATCH",
+    "path": "/cms/operators/{{operatorId}}"
+  },
+  {
+    "method": "GET",
+    "path": "/cms/operators/{{operatorId}}/buses"
+  },
+  {
+    "method": "PUT",
+    "path": "/cms/operators/{{operatorId}}/buses/{{busId}}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/cms/operators/{{operatorId}}/buses/{{busId}}"
+  },
+  {
+    "method": "GET",
+    "path": "/cms/operators/{{operatorId}}/routes"
+  },
+  {
+    "method": "PUT",
+    "path": "/cms/operators/{{operatorId}}/routes/{{routeCode}}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/cms/operators/{{operatorId}}/routes/{{routeCode}}"
+  },
+  {
+    "method": "GET",
+    "path": "/cms/buses"
+  },
+  {
+    "method": "POST",
+    "path": "/cms/buses"
+  },
+  {
+    "method": "GET",
+    "path": "/cms/buses/{{busId}}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/cms/buses/{{busId}}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/cms/buses/{{busId}}"
+  },
+  {
+    "method": "GET",
+    "path": "/cms/routes"
+  },
+  {
+    "method": "POST",
+    "path": "/cms/routes"
+  },
+  {
+    "method": "PATCH",
+    "path": "/cms/routes/{{routeCode}}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/cms/routes/{{routeCode}}"
+  },
+  {
+    "method": "GET",
+    "path": "/cms/devices"
+  },
+  {
+    "method": "POST",
+    "path": "/cms/devices"
+  },
+  {
+    "method": "PATCH",
+    "path": "/cms/devices/{{deviceId}}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/cms/devices/{{deviceId}}"
+  },
+  {
+    "method": "POST",
+    "path": "/cms/devices/{{deviceId}}/rotate-token"
+  },
+  {
+    "method": "GET",
+    "path": "/cms/help-reports"
+  },
+  {
+    "method": "PATCH",
+    "path": "/cms/help-reports/{{helpReportId}}/status"
+  },
+  {
+    "method": "GET",
+    "path": "/cms/users"
+  },
+  {
+    "method": "POST",
+    "path": "/cms/users"
+  },
+  {
+    "method": "PATCH",
+    "path": "/cms/users/{{userId}}"
+  },
+  {
+    "method": "GET",
+    "path": "/cms/audit"
+  }
+]
