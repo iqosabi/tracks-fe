@@ -138,6 +138,9 @@ export function createDataTable({
             kind,
             { actions, offset, rowIndex: (index) => visible[index].index },
           );
+    body.querySelectorAll<HTMLButtonElement>('button[data-action]').forEach((button) => {
+      button.disabled = busy;
+    });
     const start = visible.length ? offset + 1 : 0,
       end = visible.length ? offset + visible.length : 0;
     info.textContent = `${number(start)}–${number(end)}${total !== null ? ' dari ' + number(total) : ''} data${remote && !serverSearch && query ? ' · hasil pencarian di halaman ini' : ''}`;

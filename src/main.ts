@@ -15,3 +15,5 @@ try {
     '<main class="startup-error" role="alert"><h1>Workspace belum dapat dimuat.</h1><p>Periksa konfigurasi aplikasi, lalu muat ulang.</p><button class="button primary" type="button">Muat ulang</button></main>';
   query('button', root).onclick = () => location.reload();
 }
+
+import './shared/styles/monitoring.css';

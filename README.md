@@ -1,6 +1,6 @@
 # AMJ Fleet Workspace
 
-Frontend TypeScript untuk monitoring armada dan pengelolaan CMS Ananda Makmur Jaya. Memakai Vite, Leaflet/CARTO, dan modul browser tanpa framework UI. Sidebar bertingkat, search/pagination/numbering tabel, format satuan, dan pembatasan aksi berdasarkan role dipertahankan.
+Frontend React + TypeScript untuk monitoring armada dan pengelolaan CMS Ananda Makmur Jaya. Memakai React 19, Vite, hooks, dan Leaflet/CARTO. Font DM Sans dan Manrope dibundel lokal dengan lisensi OFL di `public/assets/font-license-*.txt`. Sidebar bertingkat, search/pagination/numbering tabel, format satuan, dan pembatasan aksi berdasarkan role dipertahankan.
 
 ## Menjalankan
 
@@ -26,22 +26,24 @@ Buka `http://localhost:5173`. Login memakai akun CMS atau pilih workspace demo. 
 
 ```text
 src/
-  app/                  # Lifecycle, shell, navigasi, preferensi sidebar
+  app/                  # React application, useSession, shell, navigasi, error boundary
   core/
     api/                # HTTP client, error mapping, cooldown rate limit
     auth/               # Session in-memory, Zod, koordinasi antar-tab
     config/             # Runtime config dan preferensi browser
     types/              # Kontrak komponen/data umum
   features/
-    auth/               # View dan controller login
+    auth/               # React login page
     demo/               # Data/aksi demo terisolasi dari API
-    management/         # Definisi modul, form, lookup, controller CRUD
-    maps/               # Lifecycle Leaflet dan marker CARTO
-    monitoring/         # Polling dan adapter monitoring
+    management/         # React page/modal/fields; API, payload data, kontrak modul
+    maps/               # React map/canvas; API, adapters, lifecycle Leaflet
+    monitoring/         # React live/alerts, service API
+    overview/           # Kartu ringkasan, API, proyeksi metrik sesuai role
     settings/           # Konfigurasi API/peta/sesi
   shared/
     data/               # Guard, kolom readable, formatter angka/byte/tanggal
-    ui/                 # Tabel, dialog, toast, DOM helper, HTML view
+    hooks/              # useRequest/usePolling: abort, visibility, rate limit
+    ui/                 # React table/dialog wrappers, engine tabel, toast
     styles/             # CSS terformat dan aturan responsif
 scripts/serve.ts          # Server produksi; hanya melayani dist/
 tests/unit/               # Vitest
@@ -50,6 +52,14 @@ tests/fixtures/           # Kontrak 43 metode/path, tanpa kredensial
 ```
 
 Keputusan dan kontrak lifecycle ada di [docs/architecture.md](docs/architecture.md). Cakupan endpoint ada di [docs/api-coverage.md](docs/api-coverage.md).
+
+## Ringkasan dan peta
+
+Ringkasan berisi kartu kondisi armada serta jumlah bus, rute, perangkat, dan laporan bantuan. Super admin memperoleh kartu operator, pengguna, dan audit. Semua query memakai scope token dari backend; frontend tidak mengirim operator override. Total memakai metadata API; `—` berarti total tidak diberikan, bukan nol dan bukan jumlah isi halaman pertama.
+
+Peta memenuhi area workspace di bawah header. Marker biasa berbentuk ikon; kartu floating hanya muncul untuk bus dipilih atau overspeed, berisi bus, lat, lon, time bus, delay, dan speed. Overspeed mengikuti flag/peringatan atau batas kecepatan eksplisit dari API, tanpa ambang buatan frontend. Delay memakai nilai API atau selisih `receivedAt` terhadap waktu bus. Nilai yang tidak tersedia ditampilkan `—`.
+
+Waktu absolut memakai Asia/Jakarta dengan format `HH:mm:ss.SSS WIB`; delay memakai durasi `HH:mm:ss.SSS`. Peta membaca sampai 25 halaman × 200 kendaraan. Jika batas ini tercapai, ada pesan bahwa cakupan belum lengkap. Polling 15 detik tidak bertumpuk dan request dibatalkan ketika pindah halaman; ringkasan inventaris diperbarui setiap 60 detik. Modul peta dimuat melalui lazy import.
 
 ## Quality checks
 

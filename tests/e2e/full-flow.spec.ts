@@ -399,6 +399,7 @@ test('all 43 CMS endpoints remain reachable through their UI flows', async ({ br
     await page.getByRole('button', { name: 'Keluar dari semua perangkat' }).click();
     await page.locator('#confirm-logout').click();
     await page.getByRole('heading', { name: 'Selamat datang kembali.' }).waitFor();
+    await page.locator('.modal-overlay').waitFor({ state: 'detached' });
     await page.locator('[name=username]').fill('synthetic');
     await page.locator('[name=password]').fill('synthetic-password');
     await page.getByRole('button', { name: 'Masuk ke workspace' }).click();

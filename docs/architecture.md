@@ -2,19 +2,19 @@
 
 ## Batas tanggung jawab
 
-`app/application.ts` mengatur pergantian view, auth lifecycle, dan pembersihan fitur; bukan menyusun request CRUD. Shell, navigasi, dan katalog route dipisahkan dari controller.
+`app/application.tsx` merender halaman React berdasarkan sesi dan navigasi. `useSession` memiliki lifecycle auth dengan cleanup; `shell.tsx` mengelola sidebar melalui state. Login, ringkasan, peta, armada live, CMS, demo, dan pengaturan adalah komponen TSX. Tidak ada controller DOM tingkat halaman.
 
-`core/auth` memiliki tipe User/Role/Session dan validator Zod. Token hanya berada di closure, bukan localStorage. Storage auth hanya menyimpan marker koordinasi refresh/cooldown. Preferensi UI terpisah dari sesi.
+Fitur memisahkan komponen UI dari `api.ts` (endpoint dan HTTP), `data.ts` (transformasi payload), `types.ts` (kontrak), dan hooks bersama. `management-page.tsx` menangani list/filter/ownership; `management-modal.tsx` menangani form/konfirmasi/token satu kali; `fields.tsx` merender input dan lookup. `definitions.ts` tetap menjadi katalog metode/path/field/perizinan dari Postman.
 
-`core/api` menyediakan HTTP boundary bersama. Respons bertipe `unknown` sampai diperiksa melalui guard. Error diterjemahkan ke pesan UI stabil; isi respons sensitif tidak dicetak. Cooldown 429 dibagi antarfitur. Tidak ada retry generik pada mutasi; satu retry setelah 401 dimiliki auth client setelah refresh terkoordinasi.
+`core/auth` memvalidasi User/Role/Session melalui Zod. Access token berada di memori; storage auth hanya untuk koordinasi refresh/cooldown. `core/api` menerima respons `unknown`, menerapkan timeout dan cooldown bersama untuk 429. Tidak ada retry otomatis pada mutasi yang hasilnya belum pasti. Auth memiliki satu retry setelah refresh terkoordinasi pada 401.
 
-`features/management/definitions.ts` adalah katalog metode/path/field/perizinan. Controller mengorkestrasi list, mutasi, dan ownership. Form dan lookup memiliki modul tersendiri. UUID digunakan pada request, bukan informasi utama tabel.
+`shared/hooks/use-request.ts` membatalkan query saat dependency berubah atau komponen dilepas. `use-polling.ts` mencegah overlap, menunggu request selesai sebelum menjadwalkan polling, menunda saat tab tersembunyi, dan menghormati Retry-After. Hook mengabaikan respons setelah cleanup. Mutasi hanya berjalan dari event handler.
 
-`features/monitoring` memiliki polling dengan pembatalan request lama dan pemeriksaan generation. Adapter path/query bisa diuji tanpa memuat Leaflet/browser. Peta mempertahankan zoom pengguna saat data diperbarui.
+`features/maps/data.ts` memvalidasi koordinat, identitas bus, overspeed, waktu, dan delay. Kecepatan saja tidak membentuk overspeed tanpa flag/peringatan/batas API. `features/overview/data.ts` memproyeksikan metrik readable dan tidak menafsirkan panjang halaman sebagai total. Role menentukan query administratif; scope data tetap ditegakkan backend.
 
-`shared/ui/data-table` mendukung data source remote/lokal. Pagination server memakai offset global; pagination lokal bekerja atas hasil pencarian. Indeks aksi mengarah ke record sumber setelah filter/pagination. Search hanya membaca kolom operasional.
+`FleetCanvas`, `DataTableView`, dan `DialogView` menjadi batas integrasi imperative. React memiliki elemen host; Leaflet, engine tabel, dan pengelola dialog hanya mengubah subtree miliknya. Effect melepas listeners, observer, timer, instance peta, dan dialog saat unmount. Callback terbaru dipisahkan dari lifecycle instance agar tabel tidak dibuat ulang pada setiap render. Engine tabel mempertahankan pagination, pencarian, numbering, dan indeks record sumber setelah filter. Dialog mempertahankan focus trap, Escape/backdrop, dan pengembalian fokus.
 
-`shared/ui/dialog` memiliki satu lifecycle, focus trap, Escape/backdrop, dan pengembalian fokus. Fitur memiliki abort signal untuk request dialog. Semua input backend/user pada markup harus melalui `escape()`. Tagged template `html` membantu keterbacaan dan bukan sanitizer; error text memakai textContent atau escape.
+React meng-escape teks API secara default. Markup engine tabel/marker memakai escape eksplisit; satu-satunya HTML pada komponen shell berasal dari katalog ikon statis. Token perangkat hanya ditampilkan di modal satu kali dan tidak disimpan atau dirender di tabel.
 
 ## TypeScript dan pengujian
 
@@ -24,7 +24,7 @@ Unit tests menguji concurrency/replay sesi, HTTP boundary, BigInt, proyeksi read
 
 ## Build dan deployment
 
-Vite membundel/minify TypeScript/CSS dan memberi hash pada aset. Leaflet dan Zod berasal dari dependency terkunci; tidak ada copy vendor JavaScript manual. CSS dibagi berdasarkan fondasi, identitas, workspace, dan kontrol. Selector tak terpakai/deklarasi tertimpa dikurangi sambil mempertahankan urutan cascade yang relevan.
+Vite membundel/minify TypeScript/CSS dan memberi hash pada aset. React, font OFL, Leaflet, dan Zod berasal dari dependency terkunci; tidak ada copy vendor JavaScript manual. CSS dibagi berdasarkan fondasi, identitas, workspace, dan kontrol. Selector tak terpakai/deklarasi tertimpa dikurangi sambil mempertahankan urutan cascade yang relevan.
 
 Build menghasilkan `dist/` dan `build-server/serve.js`. Server memakai built-in Node, allowlist tipe file, pembatasan path/source, security headers, cache immutable pada aset hash, dan no-store pada HTML/runtime config. Docker runtime non-root tidak membawa source atau environment file.
 

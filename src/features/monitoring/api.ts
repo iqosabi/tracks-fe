@@ -21,3 +21,10 @@ export function flatten(value: unknown, prefix = '', out: ApiRecord = {}) {
   } else out[prefix || 'value'] = value;
   return out;
 }
+export function monitoringApi(api: import('../../core/api/client').ApiClient) {
+  return {
+    fleet: (options: Parameters<typeof fleetPath>[0], signal: AbortSignal) =>
+      api.request(fleetPath(options), { signal }),
+    alerts: (signal: AbortSignal) => api.request('/monitoring/alerts', { signal }),
+  };
+}

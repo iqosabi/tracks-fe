@@ -1,3 +1,4 @@
+import { time } from '../../shared/data/formatters';
 import { z } from 'zod';
 import { ApiError, responseError } from '../api/errors';
 import { browserStorage, type StorageAdapter } from '../config/storage';
@@ -124,9 +125,7 @@ export function createAuth(options: AuthOptions): AuthClient {
     const retryAt = marker().retryAt ?? 0;
     if (retryAt > Date.now())
       throw new ApiError(
-        'Batas permintaan aktif. Coba lagi setelah ' +
-          new Date(retryAt).toLocaleTimeString('id-ID') +
-          '.',
+        'Batas permintaan aktif. Coba lagi setelah ' + time(retryAt) + '.',
         429,
         retryAt,
       );

@@ -8,10 +8,14 @@ export interface FleetPosition {
   lng: number;
   label: string;
   status?: string;
+  id?: string;
+  overspeed?: boolean;
+  selected?: boolean;
 }
 export interface FleetMap {
   update(data: FleetPosition[]): void;
   fit(): void;
+  focus(id: string): void;
   destroy(): void;
 }
 
@@ -33,7 +37,8 @@ export function createFleetMap(
   {
     onSelect = () => {},
     demo = false,
-  }: { onSelect?: (position: FleetPosition) => void; demo?: boolean } = {},
+    floating = false,
+  }: { onSelect?: (position: FleetPosition) => void; demo?: boolean; floating?: boolean } = {},
 ): FleetMap {
   container.innerHTML =
     '<div class="carto-canvas" aria-label="Peta armada CARTO interaktif"></div><div class="map-status" role="status">Memuat peta CARTO…</div><button type="button" class="map-fit" aria-label="Tampilkan semua kendaraan">⊞ <span>Semua armada</span></button><div class="map-key"><span><i class="dot green"></i>Aktif</span><span><i class="dot amber"></i>Berhenti / tertunda</span><span><i class="dot gray"></i>Offline</span></div>';
@@ -73,7 +78,7 @@ export function createFleetMap(
       (demo
         ? 'Posisi ilustrasi · demo'
         : positions.length
-          ? positions.length + ' kendaraan · halaman ini'
+          ? positions.length + ' kendaraan dengan GPS'
           : 'Belum ada posisi GPS');
   };
   tiles.on('tileerror', () => {
@@ -119,18 +124,27 @@ export function createFleetMap(
         const label = escape(p.label || 'Kendaraan');
         const marker = L.marker([p.lat, p.lng], {
           icon: L.divIcon({
-            className: 'fleet-map-marker',
-            html: `<span class="map-vehicle-pill ${tone}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="3" width="14" height="16" rx="3"/><path d="M5 11h14M8 15h1m6 0h1M8 19v2m8-2v2"/></svg>${label}</span>`,
-            iconSize: [115, 38],
-            iconAnchor: [57, 19],
+            className: 'fleet-map-marker' + (floating ? ' compact-marker' : ''),
+            html: `<span class="map-vehicle-pill ${tone} ${p.overspeed ? 'overspeed' : ''} ${p.selected ? 'selected' : ''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="3" width="14" height="16" rx="3"/><path d="M5 11h14M8 15h1m6 0h1M8 19v2m8-2v2"/></svg>${!floating || p.overspeed || p.selected ? label : ''}</span>`,
+            iconSize: floating ? [38, 38] : [115, 38],
+            iconAnchor: floating ? [19, 19] : [57, 19],
           }),
           title: String(p.label),
           keyboard: true,
         }).addTo(layer);
-        marker.bindPopup(
-          `<div class="map-popup"><small>${demo ? 'DEMO VEHICLE' : 'FLEET MONITORING'}</small><strong>${label}</strong><p>${escape(statusText(p.status || 'Status tidak tersedia'))}</p><span>Lat ${number(p.lat, 6)} · Lon ${number(p.lng, 6)}</span></div>`,
-        );
+        if (!floating)
+          marker.bindPopup(
+            `<div class="map-popup"><small>${demo ? 'DEMO VEHICLE' : 'FLEET MONITORING'}</small><strong>${label}</strong><p>${escape(statusText(p.status || 'Status tidak tersedia'))}</p><span>Lat ${number(p.lat, 6)} · Lon ${number(p.lng, 6)}</span></div>`,
+          );
         marker.on('click', () => onSelect(p));
+        if (floating)
+          marker.getElement()?.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              event.stopPropagation();
+              onSelect(p);
+            }
+          });
       }
       refreshStatus();
       if (initial && positions.length) {
@@ -139,6 +153,11 @@ export function createFleetMap(
       }
     },
     fit,
+    focus(id) {
+      const position = positions.find((p) => p.id === id);
+      if (position)
+        map.setView([position.lat, position.lng], Math.max(map.getZoom(), 14), { animate: false });
+    },
     destroy() {
       removed = true;
       observer.disconnect();

@@ -1,0 +1,211 @@
+/* Full map occupies the workspace below the global header. */
+.page-map .content {
+  padding: 0;
+  height: calc(100dvh - 65px);
+  min-height: 0;
+  overflow: hidden;
+}
+.page-map .page-heading,
+.page-map .main-footer {
+  display: none;
+}
+.fleet-full-map {
+  position: relative;
+  height: 100%;
+  min-height: 400px;
+  isolation: isolate;
+}
+.fleet-full-canvas,
+.fleet-full-canvas .carto-canvas {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+}
+.map-controls {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 500;
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px;
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+  box-shadow: 0 5px 24px #0001;
+  max-width: calc(100% - 40px);
+}
+.map-controls .field {
+  margin: 0;
+  gap: 6px;
+}
+.map-controls input {
+  width: 200px;
+}
+.map-controls small {
+  flex-basis: 100%;
+  color: #666;
+}
+.map-search-results {
+  flex-basis: 100%;
+  display: grid;
+  gap: 6px;
+  max-height: 220px;
+  overflow: auto;
+}
+.map-floating-data {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  bottom: 110px;
+  z-index: 500;
+  overflow-y: auto;
+  width: 310px;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.floating-bus-card {
+  pointer-events: auto;
+  flex-shrink: 0;
+  padding: 16px;
+  border-radius: 16px;
+  background: white;
+  border: 1px solid #e4e4e4;
+  box-shadow: 0 5px 24px #0001;
+}
+.floating-bus-card.overspeed {
+  border-top: 3px solid #e61436;
+}
+.floating-bus-card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+}
+.floating-bus-card header strong,
+.floating-bus-card header small {
+  display: block;
+}
+.floating-bus-card header small {
+  margin-top: 4px;
+  color: #777;
+}
+.floating-bus-card.overspeed header small {
+  color: #c70d2b;
+}
+.floating-bus-card dl {
+  margin: 14px 0 0;
+  display: grid;
+  gap: 9px;
+}
+.floating-bus-card dl div {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 8px;
+}
+.floating-bus-card dt {
+  color: #777;
+  font-size: 12px;
+}
+.floating-bus-card dd {
+  margin: 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.compact-marker .map-vehicle-pill {
+  min-width: 38px;
+  width: max-content;
+}
+.compact-marker .map-vehicle-pill.overspeed {
+  color: #fff;
+  background: #e61436;
+  border-color: #e61436;
+}
+.compact-marker .map-vehicle-pill.selected {
+  outline: 3px solid #222;
+  outline-offset: 3px;
+}
+.map-notice {
+  position: absolute;
+  z-index: 501;
+  left: 20px;
+  bottom: 100px;
+  max-width: min(600px, calc(100% - 40px));
+}
+.overview-cards h2 {
+  font-size: 17px;
+  margin: 24px 0 14px;
+}
+.overview-cards .stats {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+.metric-error {
+  color: #ba1730;
+  margin-top: 8px;
+  display: block;
+}
+.sidebar-brand-row .brand img,
+.login-story .brand img {
+  width: 95px;
+  height: auto;
+}
+.nav-parent > span:first-child,
+.nav-item > span:first-child {
+  display: inline-flex;
+}
+@media (max-width: 700px) {
+  .page-map .content {
+    height: calc(100dvh - 62px);
+  }
+  .map-controls {
+    top: 12px;
+    left: 12px;
+    padding: 10px;
+    max-width: calc(100% - 24px);
+    gap: 8px;
+  }
+  .map-controls input {
+    width: 155px;
+  }
+  .map-floating-data {
+    top: auto;
+    bottom: 95px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: 40%;
+  }
+  .map-floating-data .floating-bus-card {
+    margin-right: 44px;
+  }
+  .map-notice {
+    bottom: 60px;
+    left: 12px;
+    font-size: 11px;
+  }
+}
+.fleet-full-map .map-status {
+  top: auto;
+  bottom: 108px;
+  left: 20px;
+  max-width: calc(100% - 40px);
+  z-index: 450;
+}
+.fleet-full-map .map-fit {
+  top: auto;
+  bottom: 60px;
+  left: 20px;
+  right: auto;
+}
+@media (max-width: 1100px) {
+  .map-floating-data {
+    top: auto;
+    bottom: 145px;
+    max-height: 42%;
+  }
+}

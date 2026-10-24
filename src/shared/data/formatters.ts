@@ -44,21 +44,43 @@ export function bytes(value: unknown): string {
     .replace(/0+$/, '');
   return number(hundredths / 100n) + (fraction ? ',' + fraction : '') + ' ' + units[index];
 }
+function validDate(value: unknown): Date | null {
+  if (
+    value === null ||
+    value === undefined ||
+    value === '' ||
+    (typeof value !== 'string' && typeof value !== 'number' && !(value instanceof Date))
+  )
+    return null;
+  const result = new Date(value);
+  return Number.isNaN(result.getTime()) ? null : result;
+}
+export function time(value: unknown): string {
+  const d = validDate(value);
+  if (!d) return '—';
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jakarta',
+    hourCycle: 'h23',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    fractionalSecondDigits: 3,
+  }).formatToParts(d);
+  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  return `${part('hour')}:${part('minute')}:${part('second')}.${part('fractionalSecond')} WIB`;
+}
 export function date(value: unknown): string {
-  if (!value) return '—';
-  if (typeof value !== 'string' && typeof value !== 'number' && !(value instanceof Date))
-    return '—';
-  const d = new Date(value);
-  return Number.isNaN(d.getTime())
-    ? '—'
-    : new Intl.DateTimeFormat('id-ID', {
+  const d = validDate(value);
+  return d
+    ? new Intl.DateTimeFormat('id-ID', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
         timeZone: 'Asia/Jakarta',
-      }).format(d) + ' WIB';
+      }).format(d) +
+        ' · ' +
+        time(d)
+    : '—';
 }
 const statuses: Record<string, string> = {
   ACTIVE: 'Beroperasi',

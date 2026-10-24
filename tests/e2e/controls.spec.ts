@@ -197,8 +197,12 @@ test('sidebar, data tables, filters, record actions and CARTO configuration', as
     await page.locator('.fleet-map-marker').first().waitFor();
     await page.locator('.fleet-map-marker').last().focus();
     await page.locator('.fleet-map-marker').last().press('Enter');
-    await page.locator('.map-popup').waitFor();
-    assert.ok((await page.locator('.map-popup').innerText()).includes('Beroperasi'));
+    await page.locator('.floating-bus-card[data-selected=true]').waitFor();
+    assert.ok(
+      (await page.locator('.floating-bus-card[data-selected=true]').innerText()).includes(
+        'Beroperasi',
+      ),
+    );
     assert.ok(tileRequests > 0);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.locator('#menu').click();

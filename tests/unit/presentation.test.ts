@@ -31,7 +31,7 @@ test('counts and time intervals use their own units', () => {
   assert.equal(number('9007199254740993123'), '9.007.199.254.740.993.123');
   assert.equal(format(10000, 'ms'), '10 dtk');
   assert.equal(format(32, 'speed'), '32 km/j');
-  assert.match(date('2026-10-24T06:00:00Z'), /13.00 WIB/);
+  assert.match(date('2026-10-24T06:00:00Z'), /13:00:00.000 WIB/);
 });
 test('readable tables hide raw IDs, tokens, hashes, and unknown fields', () => {
   const html = table(
