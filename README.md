@@ -1,6 +1,6 @@
-# Tracks Monitor frontend
+# AMJ Fleet workspace
 
-Frontend monitoring armada responsif, menggunakan browser-native ES modules. Tidak memerlukan instalasi dependency untuk menjalankan, menguji auth client, atau membuat build.
+Workspace monitoring dan pengelolaan AMJ dengan sidebar responsif, menggunakan browser-native ES modules. Tidak memerlukan instalasi dependency untuk menjalankan, menguji auth client, atau membuat build.
 
 ## Menjalankan
 
@@ -49,7 +49,9 @@ Request mengikuti collection Postman yang diberikan pengguna. Environment Postma
 
 Semua request melalui Bearer client CMS. FE tidak menambahkan override operator; scope ditentukan server. Overview, armada, peta, dan alerts melakukan polling setiap 15 detik setelah permintaan selesai, tanpa overlap. Polling berhenti saat halaman tersembunyi, keluar, berpindah tampilan, atau mendapat 401/403; request dibatalkan ketika view dilepas. Timeout 20 detik. 429 mengikuti `Retry-After`. Respons gagal mempertahankan data yang sebelumnya berhasil diterima dengan peringatan bahwa datanya mungkin lama; waktu penerimaan respons tidak diklaim sebagai waktu telemetry.
 
-Collection tidak memuat contoh respons atau JSON Schema. Karena itu tampilan live menggunakan pembacaan field adaptif: ringkasan numerik mempertahankan nama field API, tabel meratakan field nested dan mempertahankan null/string/nilai byte. Daftar dikenali dari array langsung, `items`, `data.items`, atau `data`. Struktur lain ditampilkan sebagai respons JSON, bukan dipalsukan menjadi daftar kosong. Mapping ini perlu dicocokkan dengan respons staging sebenarnya sebelum mengklaim integrasi live terverifikasi.
+Collection tidak memuat contoh respons atau JSON Schema. Tampilan memakai proyeksi field yang berfokus pada informasi operasional: nomor bus/polisi, nama operator/perangkat/rute, status, kecepatan, waktu, dan penggunaan data. UUID, token/hash, metadata, field tidak dikenal, dan JSON mentah tidak ditampilkan di tabel utama. Jika respons tidak memiliki field yang dikenali, UI menampilkan state kosong yang menjelaskan format belum dapat ditampilkan; bukan data palsu.
+
+Format angka mengikuti locale Indonesia. Jumlah menggunakan pemisah ribuan (33933 → 33.933); byte string dikonversi menggunakan BigInt ke B/KB/MB/GB/TB/PB/EB berbasis 1024 (33933 → 33,14 KB, 1073741824 → 1 GB) tanpa konversi sumber ke floating-point. Presisi tampilan byte dua desimal, sedangkan perhitungan sumber tetap integer. Waktu ditampilkan dalam WIB; interval perangkat ditampilkan dalam detik dan dikonversi ke milidetik saat mengirim form. Nilai ID tidak diformat sebagai angka.
 
 Peta live menggunakan Leaflet 1.9.4 dengan basemap CARTO Positron (light_all), attribution OpenStreetMap dan CARTO tetap terlihat. Library, CSS, gambar, dan lisensi Leaflet disimpan lokal pada `src/vendor/leaflet`; tidak memerlukan npm install atau CDN JavaScript. Browser membutuhkan akses HTTPS ke `a/b/c/d.basemaps.cartocdn.com` untuk memuat tile. Marker diambil dari field latitude/longitude (juga lat/lng/lon) yang tersedia pada halaman kendaraan aktif; bukan semua halaman armada. Zoom/pan pengguna dipertahankan saat polling; tombol Semua armada melakukan fitBounds manual. Popup menampilkan label, status, serta koordinat. Tanpa koordinat, peta memberi keterangan tanpa marker palsu. Kegagalan tile diberi pesan, sedangkan marker dan kontrol tetap bisa dipakai. Saat berpindah halaman, peta dan ResizeObserver dibersihkan. Mode demo memakai basemap CARTO yang sama dengan posisi ilustrasi berlabel demo.
 
@@ -63,6 +65,14 @@ Panduan backend diperlakukan sebagai referensi kontrak. Migrasi, SQL cleanup, da
 
 ## Identitas dan tampilan AMJ
 
-Refactor menggunakan navigasi atas, ruang putih, tipografi lebih besar, kartu membulat, dan kontrol berbentuk pill yang terinspirasi pola Airbnb. Palet merah `#ed1235` mengikuti referensi logo AMJ dari pengguna. Logo SVG lokal di `src/assets/amj-logo.svg` digambar ulang dari referensi tersebut. Di mobile, navigasi utama berada di bawah; tombol menu membuka pengaturan. Style tambahan berada pada `src/redesign.css`.
+Sidebar desktop tetap di kiri dan memiliki area navigasi yang dapat di-scroll; di mobile dibuka melalui hamburger dan ditutup dengan backdrop. Identitas AMJ merah `#ed1235` dan logo SVG referensi pengguna dipertahankan. Kartu ringkasan disederhanakan menjadi label serta angka, tanpa metadata internal atau respons JSON. CSS penyempurnaan workspace berada di `src/workspace.css`.
 
-Pemeriksaan peta menggunakan tile dan API mock untuk memverifikasi marker, popup, attribution, kontrol, pembaruan posisi tanpa reset zoom, dan cleanup. Ini tidak memverifikasi ketersediaan tile CARTO atau backend dari jaringan pengguna.
+## Semua modul collection
+
+Cakupan per endpoint ada di [docs/api-coverage.md](docs/api-coverage.md). Sidebar mencakup monitoring, riwayat GPS, penggunaan internet, perbandingan operator, operator/ownership, master bus, rute, perangkat OBU, tiket bantuan, pengguna, audit, status sistem, profil, dan pengaturan sesi. Perbandingan operator, operator/ownership, pengguna, dan audit ditampilkan hanya untuk SUPER_ADMIN. Master data dapat dibaca tenant sesuai scope backend; create/update/delete dan rotasi token hanya tersedia untuk SUPER_ADMIN. OPERATOR_ADMIN dapat mengubah status tiket operatornya. Viewer tidak memiliki aksi tulis. Semua aturan akses tetap ditegakkan backend.
+
+Form CRUD mengirim JSON dengan field yang ada di contoh request collection. Pilihan bus/operator/perangkat/rute mengambil data nama dari endpoint list, mendukung pencarian server, dan mengirim ID/kode asli. Assignment bus menjelaskan perpindahan kepemilikan dan akses telemetry sebelum dikonfirmasi. Hapus, nonaktifkan perangkat, pelepasan akses, dan rotasi token meminta konfirmasi. Tidak ada request mutasi yang dijalankan otomatis saat membuka layar. Token perangkat baru ditampilkan hanya pada dialog respons sekali pakai; tidak masuk storage, log, atau tabel. Menutup dialog atau logout menghapus UI token.
+
+Status tiket yang dicontohkan collection adalah OPEN dan IN_PROGRESS; validitas nilai status lain serta persyaratan body wajib/opsional perlu dikonfirmasi dengan skema OpenAPI backend. Kesalahan validasi 400 dan konflik 409 ditampilkan di form; UI tidak mengulang request mutasi akibat network error. Profil menggunakan /auth/me; logout dan logout-all tetap melalui client auth yang terkoordinasi.
+
+Pemeriksaan peta dan seluruh aksi CMS menggunakan tile dan API mock. Pengujian tidak menyentuh data backend staging. Akses server asli, CORS/cookie, bentuk respons staging, dan akses tile CARTO dari jaringan pengguna belum terverifikasi.
