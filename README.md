@@ -51,7 +51,7 @@ Semua request melalui Bearer client CMS. FE tidak menambahkan override operator;
 
 Collection tidak memuat contoh respons atau JSON Schema. Karena itu tampilan live menggunakan pembacaan field adaptif: ringkasan numerik mempertahankan nama field API, tabel meratakan field nested dan mempertahankan null/string/nilai byte. Daftar dikenali dari array langsung, `items`, `data.items`, atau `data`. Struktur lain ditampilkan sebagai respons JSON, bukan dipalsukan menjadi daftar kosong. Mapping ini perlu dicocokkan dengan respons staging sebenarnya sebelum mengklaim integrasi live terverifikasi.
 
-Peta live menggunakan plot koordinat aktual dari field latitude/longitude (juga lat/lng/lon) yang tersedia pada halaman kendaraan aktif, disertai tautan OpenStreetMap per lokasi. Plot bukan basemap jalan dan tidak menampilkan semua halaman kendaraan. Tanpa koordinat yang dikenali, UI menampilkan keterangan serta data respons; tidak memakai peta Jakarta ilustratif milik demo.
+Peta live menggunakan Leaflet 1.9.4 dengan basemap CARTO Positron (light_all), attribution OpenStreetMap dan CARTO tetap terlihat. Library, CSS, gambar, dan lisensi Leaflet disimpan lokal pada `src/vendor/leaflet`; tidak memerlukan npm install atau CDN JavaScript. Browser membutuhkan akses HTTPS ke `a/b/c/d.basemaps.cartocdn.com` untuk memuat tile. Marker diambil dari field latitude/longitude (juga lat/lng/lon) yang tersedia pada halaman kendaraan aktif; bukan semua halaman armada. Zoom/pan pengguna dipertahankan saat polling; tombol Semua armada melakukan fitBounds manual. Popup menampilkan label, status, serta koordinat. Tanpa koordinat, peta memberi keterangan tanpa marker palsu. Kegagalan tile diberi pesan, sedangkan marker dan kontrol tetap bisa dipakai. Saat berpindah halaman, peta dan ResizeObserver dibersihkan. Mode demo memakai basemap CARTO yang sama dengan posisi ilustrasi berlabel demo.
 
 Mode demo tetap terpisah dengan label jelas. Tidak ada fallback otomatis dari kegagalan API live menjadi data demo.
 
@@ -60,3 +60,9 @@ Mode demo tetap terpisah dengan label jelas. Tidak ada fallback otomatis dari ke
 `npm test` menguji adapter parameter Fleet Monitoring, pembacaan daftar, preservasi string byte besar, serta kontrak login, konkurensi 401, 403, retry maksimum satu kali, sesi kadaluarsa, respons refresh hilang/5xx, logout gagal/sukses, logout-all, rate limit, koordinasi dua tab, dan browser tanpa Web Locks menggunakan mocked API. Pengujian tidak menghubungi backend atau mengubah database. Login, CORS, dan cookie terhadap server staging belum terverifikasi karena akses jaringan tidak tersedia dan kredensial akun belum diberikan.
 
 Panduan backend diperlakukan sebagai referensi kontrak. Migrasi, SQL cleanup, dan perintah verifikasi backend di lampiran tidak dijalankan pada proyek ini.
+
+## Identitas dan tampilan AMJ
+
+Refactor menggunakan navigasi atas, ruang putih, tipografi lebih besar, kartu membulat, dan kontrol berbentuk pill yang terinspirasi pola Airbnb. Palet merah `#ed1235` mengikuti referensi logo AMJ dari pengguna. Logo SVG lokal di `src/assets/amj-logo.svg` digambar ulang dari referensi tersebut. Di mobile, navigasi utama berada di bawah; tombol menu membuka pengaturan. Style tambahan berada pada `src/redesign.css`.
+
+Pemeriksaan peta menggunakan tile dan API mock untuk memverifikasi marker, popup, attribution, kontrol, pembaruan posisi tanpa reset zoom, dan cleanup. Ini tidak memverifikasi ketersediaan tile CARTO atau backend dari jaringan pengguna.
