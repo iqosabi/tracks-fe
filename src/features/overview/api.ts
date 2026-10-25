@@ -1,3 +1,5 @@
+import { readCollection } from '../../shared/data/collection';
+import { number } from '../../shared/data/formatters';
 import type { ApiClient } from '../../core/api/client';
 import type { Role } from '../../core/auth/schema';
 import { countSources, totalCount, type Metric } from './data';
@@ -12,7 +14,17 @@ export async function loadCounts(
       try {
         return {
           label: source.label,
-          value: totalCount(await api.request(source.path, { signal }), source.unpaginated),
+          ...(source.unpaginated
+            ? { value: totalCount(await api.request(source.path, { signal }), true) }
+            : await (async () => {
+                const result = await readCollection(api, source.path, signal);
+                return {
+                  value: (result.complete ? '' : '≥ ') + number(result.rows.length),
+                  note: result.complete
+                    ? undefined
+                    : 'Batas pemuatan tercapai; jumlah ini adalah batas bawah.',
+                };
+              })()),
         };
       } catch (error) {
         if (isAbortError(error)) throw error;

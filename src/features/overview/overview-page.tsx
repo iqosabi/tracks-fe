@@ -12,7 +12,8 @@ function Cards({ metrics, fleet = false }: { metrics: Metric[]; fleet?: boolean 
       {metrics.map((metric) => (
         <article className="stat-card" key={metric.label}>
           <span className="stat-label">{metric.label}</span>
-          <strong className="stat-number">{metric.value}</strong>
+          <strong className={metric.text ? 'stat-value' : 'stat-number'}>{metric.value}</strong>
+          {metric.note ? <small className="muted">{metric.note}</small> : null}
           {metric.error ? (
             <small className="metric-error" title={metric.error}>
               Data belum tersedia
@@ -93,7 +94,7 @@ export function OverviewPage({
       <p className="muted">
         {demo
           ? 'Angka demo untuk ilustrasi.'
-          : 'Data mengikuti izin dan scope sesi API. Nilai — berarti total belum tersedia dari server.'}
+          : 'Data mengikuti izin dan scope sesi API. Nilai — berarti data belum tersedia. Jumlah ≥ menandakan pemuatan belum lengkap.'}
       </p>
     </div>
   );

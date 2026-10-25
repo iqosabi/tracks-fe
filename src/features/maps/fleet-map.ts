@@ -44,7 +44,9 @@ export function createFleetMap(
     '<div class="carto-canvas" aria-label="Peta armada CARTO interaktif"></div><div class="map-status" role="status">Memuat peta CARTO…</div><button type="button" class="map-fit" aria-label="Tampilkan semua kendaraan">⊞ <span>Semua armada</span></button><div class="map-key"><span><i class="dot green"></i>Aktif</span><span><i class="dot amber"></i>Berhenti / tertunda</span><span><i class="dot gray"></i>Offline</span></div>';
   const status = query('.map-status', container);
   const map = L.map(query('.carto-canvas', container), {
-    scrollWheelZoom: false,
+    scrollWheelZoom: true,
+    touchZoom: true,
+    doubleClickZoom: true,
     zoomControl: false,
     zoomAnimation: false,
     fadeAnimation: false,
@@ -118,16 +120,16 @@ export function createFleetMap(
           tone =
             state === 'OFFLINE'
               ? 'offline'
-              : state === 'IDLE' || state === 'DELAYED'
+              : state === 'IDLE' || state === 'DELAY' || state === 'DELAYED'
                 ? 'idle'
                 : 'active';
         const label = escape(p.label || 'Kendaraan');
         const marker = L.marker([p.lat, p.lng], {
           icon: L.divIcon({
             className: 'fleet-map-marker' + (floating ? ' compact-marker' : ''),
-            html: `<span class="map-vehicle-pill ${tone} ${p.overspeed ? 'overspeed' : ''} ${p.selected ? 'selected' : ''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="3" width="14" height="16" rx="3"/><path d="M5 11h14M8 15h1m6 0h1M8 19v2m8-2v2"/></svg>${!floating || p.overspeed || p.selected ? label : ''}</span>`,
-            iconSize: floating ? [38, 38] : [115, 38],
-            iconAnchor: floating ? [19, 19] : [57, 19],
+            html: `<span class="map-vehicle-pill ${tone} ${p.overspeed ? 'overspeed' : ''} ${p.selected ? 'selected' : ''}"><svg class="bus-marker-icon" viewBox="0 0 32 36" aria-hidden="true"><rect x="4" y="2" width="24" height="29" rx="6" fill="currentColor"/><rect x="7" y="7" width="18" height="12" rx="2" fill="white"/><path d="M16 7v12" stroke="currentColor" stroke-width="2"/><rect x="10" y="3.5" width="12" height="2" rx="1" fill="white"/><circle cx="9" cy="25" r="2" fill="white"/><circle cx="23" cy="25" r="2" fill="white"/><path d="M11 27h10" stroke="white" stroke-width="2"/><rect x="6" y="30" width="5" height="5" rx="1.5" fill="#222"/><rect x="21" y="30" width="5" height="5" rx="1.5" fill="#222"/><path d="M2 11v7m28-7v7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>${!floating || p.overspeed || p.selected ? label : ''}</span>`,
+            iconSize: floating ? [44, 48] : [115, 38],
+            iconAnchor: floating ? [22, 24] : [57, 19],
           }),
           title: String(p.label),
           keyboard: true,
@@ -156,7 +158,7 @@ export function createFleetMap(
     focus(id) {
       const position = positions.find((p) => p.id === id);
       if (position)
-        map.setView([position.lat, position.lng], Math.max(map.getZoom(), 14), { animate: false });
+        map.setView([position.lat, position.lng], Math.max(map.getZoom(), 16), { animate: false });
     },
     destroy() {
       removed = true;

@@ -1,0 +1,1198 @@
+{
+  "description": "Contoh JSON response seluruh 43 endpoint API CMS v1.1.0. Data sintetis, bukan hasil request ke server.",
+  "basePath": "/api/v1",
+  "notes": [
+    "Gunakan response.body sebagai contoh payload HTTP; method/path/access/notes/response.status adalah metadata dokumentasi, bukan envelope API.",
+    "Semua contoh list tenant memakai satu operator. Filter operatorId tidak memberikan izin tambahan. Gunakan endpoint monitoring/operators/summary untuk perbandingan yang dikelompokkan per operator.",
+    "Akses yang dicatat mengikuti guard di repo saat ini. Kebijakan isInternalWorkspace belum dimodelkan di repo ini; contoh ini tidak menyatakan akun lintas tenant sudah memenuhi kebijakan tersebut.",
+    "Role OPERATOR_VIEWER hanya membaca tenant sendiri; OPERATOR_ADMIN juga memperbarui status tiket sendiri. Semua endpoint protected memerlukan Authorization: Bearer <accessToken>.",
+    "Semua POST auth termasuk logout/logout-all wajib X-CSRF-Protection: 1. Browser memakai credentials: include dan Origin yang diizinkan. Logout/logout-all menghapus cookie cms_refresh.",
+    "Pagination memakai hasMore, bukan total/totalPages. List kosong: items [] dan hasMore false; GET users memakai users [].",
+    "Nilai pg numeric hasil kalkulasi speedKmh dan BIGINT audit id berupa string pada konfigurasi default pg. Telemetry yang tidak tersedia bisa null.",
+    "Contoh mutasi Core OBU ditandai contract ilustratif; body upstream belum dapat diverifikasi dari repo ini. Semua token adalah placeholder tidak valid.",
+    "Error umum di commonErrorExamples bukan daftar lengkap semua kemungkinan pesan. HTTP 429 dari rate limit proxy tidak diberi contoh body karena format ditentukan proxy deployment."
+  ],
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/v1/health/live",
+      "access": "PUBLIC",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "ok": true,
+          "service": "aesta-tracks-monitor-cms"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/health/ready",
+      "access": "PUBLIC",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "ok": true,
+          "database": "up"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "access": "PUBLIC",
+      "notes": "Wajib X-CSRF-Protection: 1; Origin browser harus di CORS_ORIGINS. Set-Cookie cms_refresh (HttpOnly) dikirim terpisah; refresh token tidak masuk JSON. Cache-Control: no-store.",
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "accessToken": "EXAMPLE_ACCESS_TOKEN_NOT_VALID",
+          "tokenType": "Bearer",
+          "expiresIn": 900,
+          "refreshExpiresAt": "2026-11-01T03:00:00.000Z",
+          "user": {
+            "id": "22222222-2222-4222-8222-222222222222",
+            "username": "operator1",
+            "role": "OPERATOR_ADMIN",
+            "operatorId": "11111111-1111-4111-8111-111111111111"
+          }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/refresh",
+      "access": "COOKIE cms_refresh",
+      "notes": "Tanpa request body. Wajib X-CSRF-Protection: 1 dan cookie cms_refresh; Set-Cookie merotasi refresh token. Cache-Control: no-store.",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "accessToken": "EXAMPLE_ACCESS_TOKEN_NOT_VALID",
+          "tokenType": "Bearer",
+          "expiresIn": 900,
+          "refreshExpiresAt": "2026-11-01T03:00:00.000Z",
+          "user": {
+            "id": "22222222-2222-4222-8222-222222222222",
+            "username": "operator1",
+            "role": "OPERATOR_ADMIN",
+            "operatorId": "11111111-1111-4111-8111-111111111111"
+          }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/logout",
+      "access": "PUBLIC / COOKIE cms_refresh",
+      "response": {
+        "status": 204,
+        "headers": {},
+        "body": null
+      },
+      "notes": "Tidak ada response body di HTTP. body: null di file ini hanya penanda, bukan JSON null yang dikirim server."
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/logout-all",
+      "access": "OPERATOR_VIEWER, OPERATOR_ADMIN, SUPER_ADMIN",
+      "response": {
+        "status": 204,
+        "headers": {},
+        "body": null
+      },
+      "notes": "Tidak ada response body di HTTP. body: null di file ini hanya penanda, bukan JSON null yang dikirim server."
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/auth/me",
+      "access": "OPERATOR_VIEWER, OPERATOR_ADMIN, SUPER_ADMIN",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "user": {
+            "id": "22222222-2222-4222-8222-222222222222",
+            "username": "operator1",
+            "role": "OPERATOR_ADMIN",
+            "operatorId": "11111111-1111-4111-8111-111111111111"
+          }
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/monitoring/summary",
+      "access": "OPERATOR_VIEWER, OPERATOR_ADMIN, SUPER_ADMIN",
+      "exampleQuery": {
+        "operatorId": "11111111-1111-4111-8111-111111111111"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "totalDevices": 1,
+          "totalBuses": 1,
+          "active": 1,
+          "idle": 0,
+          "delay": 0,
+          "offline": 0,
+          "overspeed": 0,
+          "latestReceivedAt": "2026-10-25T02:59:59.000Z",
+          "openHelpReports": 1,
+          "measuredAt": "2026-10-25T03:00:00.000Z",
+          "thresholds": {
+            "activeSec": 12,
+            "offlineSec": 90,
+            "deviceLagSec": 15
+          }
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/monitoring/operators/summary",
+      "access": "SUPER_ADMIN",
+      "notes": "Perbandingan antaroperator dikelompokkan dalam operators; tiap item satu operator. Contoh hanya menampilkan satu operator.",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "operators": [
+            {
+              "id": "11111111-1111-4111-8111-111111111111",
+              "code": "AMJ",
+              "name": "AMJ",
+              "active": true,
+              "assignedBuses": 1,
+              "totalDevices": 1,
+              "activeDevices": 1,
+              "idleDevices": 0,
+              "delayedDevices": 0,
+              "offlineDevices": 0
+            }
+          ],
+          "unassignedBuses": 0,
+          "measuredAt": "2026-10-25T03:00:00.000Z"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/monitoring/vehicles",
+      "access": "OPERATOR_VIEWER, OPERATOR_ADMIN, SUPER_ADMIN",
+      "exampleQuery": {
+        "operatorId": "11111111-1111-4111-8111-111111111111"
+      },
+      "notes": "speedKmh dari SQL numeric diserialisasi pg default sebagai string. Koordinat/telemetry bisa null jika belum ada posisi.",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "items": [
+            {
+              "deviceId": "device-example-001",
+              "deviceLabel": "OBU BUS-001",
+              "deviceActive": true,
+              "busId": "bus-example-001",
+              "bodyNo": "BUS-001",
+              "plateNo": "B 1234 XYZ",
+              "operator": "AMJ",
+              "model": "Hino",
+              "operatorId": "11111111-1111-4111-8111-111111111111",
+              "operatorCode": "AMJ",
+              "busActive": true,
+              "sendIntervalMs": 10000,
+              "latitude": -6.1754,
+              "longitude": 106.8272,
+              "speedKmh": "36.0",
+              "bearingDegrees": 90,
+              "accuracyMeters": 5,
+              "deviceTimestamp": "2026-10-25T02:59:58.000Z",
+              "receivedAt": "2026-10-25T02:59:59.000Z",
+              "routeCode": "R01",
+              "status": "ACTIVE",
+              "secondsSinceLastData": 1,
+              "overspeed": false
+            }
+          ],
+          "page": 1,
+          "limit": 100,
+          "hasMore": false,
+          "measuredAt": "2026-10-25T03:00:00.000Z"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/monitoring/alerts",
+      "access": "OPERATOR_VIEWER, OPERATOR_ADMIN, SUPER_ADMIN",
+      "exampleQuery": {
+        "operatorId": "11111111-1111-4111-8111-111111111111"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "items": [
+            {
+              "deviceId": "device-example-001",
+              "busId": "bus-example-001",
+              "bodyNo": "BUS-001",
+              "operatorId": "11111111-1111-4111-8111-111111111111",
+              "operatorCode": "AMJ",
+              "status": "DELAY",
+              "receivedAt": "2026-10-25T02:59:40.000Z",
+              "deviceTimestamp": "2026-10-25T02:59:39.000Z",
+              "routeCode": "R01",
+              "speedKmh": "36.0",
+              "overspeed": false
+            }
+          ],
+          "limitedTo": 200,
+          "measuredAt": "2026-10-25T03:00:00.000Z",
+          "overspeedKmh": 49
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/monitoring/vehicles/{deviceId}/history",
+      "access": "OPERATOR_VIEWER, OPERATOR_ADMIN, SUPER_ADMIN",
+      "exampleQuery": {
+        "from": "2026-10-25T02:00:00.000Z",
+        "to": "2026-10-25T03:00:00.000Z"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "deviceId": "device-example-001",
+          "from": "2026-10-25T02:00:00.000Z",
+          "to": "2026-10-25T03:00:00.000Z",
+          "items": [
+            {
+              "eventId": "position-event-example-001",
+              "latitude": -6.1754,
+              "longitude": 106.8272,
+              "speedKmh": "36.0",
+              "bearingDegrees": 90,
+              "accuracyMeters": 5,
+              "deviceTimestamp": "2026-10-25T02:59:58.000Z",
+              "receivedAt": "2026-10-25T02:59:59.000Z",
+              "routeCode": "R01",
+              "provider": "gps"
+            }
+          ],
+          "limit": 500
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/monitoring/usage",
+      "access": "OPERATOR_VIEWER, OPERATOR_ADMIN, SUPER_ADMIN",
+      "exampleQuery": {
+        "operatorId": "11111111-1111-4111-8111-111111111111",
+        "from": "2026-10-25",
+        "to": "2026-10-25"
+      },
+      "notes": "deviceBytes dan appBytes selalu string, bukan number.",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "items": [
+            {
+              "id": "usage-example-001",
+              "deviceId": "device-example-001",
+              "busBodyNo": "BUS-001",
+              "day": "2026-10-25",
+              "deviceBytes": "104857600",
+              "appBytes": "52428800",
+              "reportedAt": "2026-10-25T03:00:00.000Z",
+              "receivedAt": "2026-10-25T03:00:00.000Z"
+            }
+          ],
+          "page": 1,
+          "limit": 100,
+          "hasMore": false
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/monitoring/usage/summary",
+      "access": "OPERATOR_VIEWER, OPERATOR_ADMIN, SUPER_ADMIN",
+      "exampleQuery": {
+        "operatorId": "11111111-1111-4111-8111-111111111111",
+        "from": "2026-10-25",
+        "to": "2026-10-25"
+      },
+      "notes": "Tanpa filter tanggal, from/to bernilai null. Device tanpa report: reports 0, deviceBytes/appBytes null.",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "items": [
+            {
+              "deviceId": "device-example-001",
+              "busBodyNo": "BUS-001",
+              "reports": 1,
+              "deviceBytes": "104857600",
+              "appBytes": "52428800"
+            }
+          ],
+          "from": "2026-10-25",
+          "to": "2026-10-25",
+          "note": "Totals sum received reports; upstream source must prevent overlapping counters."
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/cms/buses",
+      "access": "OPERATOR_VIEWER, OPERATOR_ADMIN, SUPER_ADMIN",
+      "exampleQuery": {
+        "operatorId": "11111111-1111-4111-8111-111111111111"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "items": [
+            {
+              "id": "bus-example-001",
+              "bodyNo": "BUS-001",
+              "plateNo": "B 1234 XYZ",
+              "operator": "AMJ",
+              "model": "Hino",
+              "active": true,
+              "createdAt": "2026-10-25T03:00:00.000Z",
+              "updatedAt": "2026-10-25T03:00:00.000Z",
+              "operatorId": "11111111-1111-4111-8111-111111111111",
+              "operatorCode": "AMJ"
+            }
+          ],
+          "page": 1,
+          "limit": 50,
+          "hasMore": false
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/cms/buses/{id}",
+      "access": "OPERATOR_VIEWER, OPERATOR_ADMIN, SUPER_ADMIN",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "bus-example-001",
+          "bodyNo": "BUS-001",
+          "plateNo": "B 1234 XYZ",
+          "operator": "AMJ",
+          "model": "Hino",
+          "active": true,
+          "createdAt": "2026-10-25T03:00:00.000Z",
+          "updatedAt": "2026-10-25T03:00:00.000Z",
+          "operatorId": "11111111-1111-4111-8111-111111111111",
+          "operatorCode": "AMJ"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/cms/buses",
+      "access": "SUPER_ADMIN",
+      "contract": "Ilustratif: body diteruskan apa adanya dari Core OBU API; schema sukses tidak didefinisikan di repo CMS. Verifikasi terhadap kontrak core sebelum dipakai sebagai mock definitif.",
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "bus-example-001",
+          "bodyNo": "BUS-001",
+          "plateNo": "B 1234 XYZ",
+          "operator": "AMJ",
+          "model": "Hino",
+          "active": true,
+          "createdAt": "2026-10-25T03:00:00.000Z",
+          "updatedAt": "2026-10-25T03:00:00.000Z"
+        }
+      }
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/cms/buses/{id}",
+      "access": "SUPER_ADMIN",
+      "contract": "Ilustratif: body diteruskan apa adanya dari Core OBU API; schema sukses tidak didefinisikan di repo CMS. Verifikasi terhadap kontrak core sebelum dipakai sebagai mock definitif.",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "bus-example-001",
+          "bodyNo": "BUS-001",
+          "plateNo": "B 1234 XYZ",
+          "operator": "AMJ",
+          "model": "Hino RK",
+          "active": true,
+          "createdAt": "2026-10-25T03:00:00.000Z",
+          "updatedAt": "2026-10-25T03:00:00.000Z"
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/cms/buses/{id}",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 204,
+        "headers": {},
+        "body": null
+      },
+      "notes": "Tidak ada response body di HTTP. body: null di file ini hanya penanda, bukan JSON null yang dikirim server."
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/cms/routes",
+      "access": "OPERATOR_VIEWER, OPERATOR_ADMIN, SUPER_ADMIN",
+      "exampleQuery": {
+        "operatorId": "11111111-1111-4111-8111-111111111111"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "items": [
+            {
+              "code": "R01",
+              "value": "Terminal A - Terminal B"
+            }
+          ],
+          "page": 1,
+          "limit": 50,
+          "hasMore": false
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/cms/routes",
+      "access": "SUPER_ADMIN",
+      "contract": "Ilustratif: body diteruskan apa adanya dari Core OBU API; schema sukses tidak didefinisikan di repo CMS. Verifikasi terhadap kontrak core sebelum dipakai sebagai mock definitif.",
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "code": "R01",
+          "value": "Terminal A - Terminal B"
+        }
+      }
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/cms/routes/{code}",
+      "access": "SUPER_ADMIN",
+      "contract": "Ilustratif: body diteruskan apa adanya dari Core OBU API; schema sukses tidak didefinisikan di repo CMS. Verifikasi terhadap kontrak core sebelum dipakai sebagai mock definitif.",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "code": "R01",
+          "value": "Terminal A - Terminal C"
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/cms/routes/{code}",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 204,
+        "headers": {},
+        "body": null
+      },
+      "notes": "Tidak ada response body di HTTP. body: null di file ini hanya penanda, bukan JSON null yang dikirim server."
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/cms/devices",
+      "access": "OPERATOR_VIEWER, OPERATOR_ADMIN, SUPER_ADMIN",
+      "exampleQuery": {
+        "operatorId": "11111111-1111-4111-8111-111111111111"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "items": [
+            {
+              "id": "device-example-001",
+              "label": "OBU BUS-001",
+              "active": true,
+              "busId": "bus-example-001",
+              "busBodyNo": "BUS-001",
+              "sendIntervalMs": 10000,
+              "gpsListenMs": 1000,
+              "configPollIntervalSec": 60,
+              "configVersion": 1,
+              "createdAt": "2026-10-25T03:00:00.000Z",
+              "updatedAt": "2026-10-25T03:00:00.000Z",
+              "plateNo": "B 1234 XYZ",
+              "operator": "AMJ",
+              "operatorId": "11111111-1111-4111-8111-111111111111",
+              "operatorCode": "AMJ"
+            }
+          ],
+          "page": 1,
+          "limit": 50,
+          "hasMore": false
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/cms/devices",
+      "access": "SUPER_ADMIN",
+      "notes": "Token satu kali hanyalah placeholder. Cache-Control: no-store. Nama field token wajib dikonfirmasi ke Core OBU API.",
+      "contract": "Ilustratif: body diteruskan apa adanya dari Core OBU API; schema sukses tidak didefinisikan di repo CMS. Verifikasi terhadap kontrak core sebelum dipakai sebagai mock definitif.",
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "device": {
+            "id": "device-example-001",
+            "label": "OBU BUS-001",
+            "active": true,
+            "busId": "bus-example-001",
+            "busBodyNo": "BUS-001",
+            "sendIntervalMs": 10000,
+            "gpsListenMs": 1000,
+            "configPollIntervalSec": 60,
+            "configVersion": 1,
+            "createdAt": "2026-10-25T03:00:00.000Z",
+            "updatedAt": "2026-10-25T03:00:00.000Z"
+          },
+          "token": "EXAMPLE_ONE_TIME_DEVICE_TOKEN_NOT_VALID"
+        }
+      }
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/cms/devices/{id}",
+      "access": "SUPER_ADMIN",
+      "contract": "Ilustratif: body diteruskan apa adanya dari Core OBU API; schema sukses tidak didefinisikan di repo CMS. Verifikasi terhadap kontrak core sebelum dipakai sebagai mock definitif.",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "device-example-001",
+          "label": "OBU BUS-001",
+          "active": true,
+          "busId": "bus-example-001",
+          "busBodyNo": "BUS-001",
+          "sendIntervalMs": 15000,
+          "gpsListenMs": 1000,
+          "configPollIntervalSec": 60,
+          "configVersion": 2,
+          "createdAt": "2026-10-25T03:00:00.000Z",
+          "updatedAt": "2026-10-25T03:00:00.000Z"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/cms/devices/{id}/rotate-token",
+      "access": "SUPER_ADMIN",
+      "notes": "Nama field token/wrapper perlu dikonfirmasi ke Core OBU API. Cache-Control: no-store.",
+      "contract": "Ilustratif: body diteruskan apa adanya dari Core OBU API; schema sukses tidak didefinisikan di repo CMS. Verifikasi terhadap kontrak core sebelum dipakai sebagai mock definitif.",
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "token": "EXAMPLE_ROTATED_DEVICE_TOKEN_NOT_VALID"
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/cms/devices/{id}",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 204,
+        "headers": {},
+        "body": null
+      },
+      "notes": "Tidak ada response body di HTTP. body: null di file ini hanya penanda, bukan JSON null yang dikirim server."
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/cms/audit",
+      "access": "SUPER_ADMIN",
+      "notes": "id BIGSERIAL dikembalikan pg default sebagai string.",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "items": [
+            {
+              "id": "1",
+              "action": "operator.bus.assign",
+              "entityType": "bus",
+              "entityId": "bus-example-001",
+              "metadata": {
+                "operatorId": "11111111-1111-4111-8111-111111111111"
+              },
+              "createdAt": "2026-10-25T03:00:00.000Z",
+              "actor": "admin"
+            }
+          ],
+          "page": 1,
+          "limit": 50,
+          "hasMore": false
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/cms/users",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "users": [
+            {
+              "id": "22222222-2222-4222-8222-222222222222",
+              "username": "operator1",
+              "role": "OPERATOR_ADMIN",
+              "operatorId": "11111111-1111-4111-8111-111111111111",
+              "active": true,
+              "createdAt": "2026-10-25T03:00:00.000Z",
+              "updatedAt": "2026-10-25T03:00:00.000Z"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/cms/users",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "22222222-2222-4222-8222-222222222222",
+          "username": "operator1",
+          "role": "OPERATOR_ADMIN",
+          "operatorId": "11111111-1111-4111-8111-111111111111",
+          "active": true
+        }
+      }
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/cms/users/{id}",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "22222222-2222-4222-8222-222222222222",
+          "username": "operator1",
+          "role": "OPERATOR_ADMIN",
+          "operatorId": "11111111-1111-4111-8111-111111111111",
+          "active": false
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/cms/operators",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "items": [
+            {
+              "id": "11111111-1111-4111-8111-111111111111",
+              "code": "AMJ",
+              "name": "AMJ",
+              "active": true,
+              "createdAt": "2026-10-25T03:00:00.000Z",
+              "busCount": 1,
+              "deviceCount": 1
+            }
+          ],
+          "page": 1,
+          "limit": 50,
+          "hasMore": false
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/cms/operators",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "11111111-1111-4111-8111-111111111111",
+          "code": "AMJ",
+          "name": "AMJ",
+          "active": true
+        }
+      }
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/cms/operators/{operatorId}",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "11111111-1111-4111-8111-111111111111",
+          "code": "AMJ",
+          "name": "AMJ Transport",
+          "active": true
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/cms/operators/{operatorId}/buses",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "items": [
+            {
+              "id": "bus-example-001",
+              "bodyNo": "BUS-001",
+              "plateNo": "B 1234 XYZ",
+              "operator": "AMJ",
+              "model": "Hino",
+              "active": true,
+              "operatorId": "11111111-1111-4111-8111-111111111111",
+              "operatorCode": "AMJ",
+              "assignedAt": "2026-10-25T03:00:00.000Z"
+            }
+          ],
+          "page": 1,
+          "limit": 50,
+          "hasMore": false
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/cms/operators/{operatorId}/buses/{busId}",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "busId": "bus-example-001",
+          "operatorId": "11111111-1111-4111-8111-111111111111",
+          "operatorCode": "AMJ",
+          "bodyNo": "BUS-001"
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/cms/operators/{operatorId}/buses/{busId}",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 204,
+        "headers": {},
+        "body": null
+      },
+      "notes": "Tidak ada response body di HTTP. body: null di file ini hanya penanda, bukan JSON null yang dikirim server."
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/cms/operators/{operatorId}/routes",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "items": [
+            {
+              "code": "R01",
+              "value": "Terminal A - Terminal B",
+              "operatorId": "11111111-1111-4111-8111-111111111111",
+              "operatorCode": "AMJ",
+              "assignedAt": "2026-10-25T03:00:00.000Z"
+            }
+          ],
+          "page": 1,
+          "limit": 50,
+          "hasMore": false
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/cms/operators/{operatorId}/routes/{routeCode}",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "operatorId": "11111111-1111-4111-8111-111111111111",
+          "operatorCode": "AMJ",
+          "routeCode": "R01"
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/cms/operators/{operatorId}/routes/{routeCode}",
+      "access": "SUPER_ADMIN",
+      "response": {
+        "status": 204,
+        "headers": {},
+        "body": null
+      },
+      "notes": "Tidak ada response body di HTTP. body: null di file ini hanya penanda, bukan JSON null yang dikirim server."
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/cms/help-reports",
+      "access": "OPERATOR_VIEWER, OPERATOR_ADMIN, SUPER_ADMIN",
+      "exampleQuery": {
+        "operatorId": "11111111-1111-4111-8111-111111111111"
+      },
+      "notes": "category adalah placeholder data upstream; enum kategori tidak didefinisikan di repo ini.",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "items": [
+            {
+              "id": "help-example-001",
+              "requestId": "help-request-example-001",
+              "deviceId": "device-example-001",
+              "busBodyNo": "BUS-001",
+              "category": "EXAMPLE_CATEGORY",
+              "description": "Bus membutuhkan bantuan teknis",
+              "routeCode": "R01",
+              "latitude": -6.1754,
+              "longitude": 106.8272,
+              "accuracyMeters": 5,
+              "speedKmh": 0,
+              "reportedAt": "2026-10-25T03:00:00.000Z",
+              "receivedAt": "2026-10-25T03:00:00.000Z",
+              "status": "OPEN"
+            }
+          ],
+          "page": 1,
+          "limit": 50,
+          "hasMore": false
+        }
+      }
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/cms/help-reports/{id}/status",
+      "access": "OPERATOR_ADMIN, SUPER_ADMIN",
+      "notes": "note request hanya disimpan di audit log; tidak dikembalikan dalam response.",
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "help-example-001",
+          "status": "IN_PROGRESS",
+          "busBodyNo": "BUS-001",
+          "receivedAt": "2026-10-25T03:00:00.000Z"
+        }
+      }
+    }
+  ],
+  "commonErrorExamples": [
+    {
+      "name": "validation",
+      "appliesTo": "Endpoint dengan validasi DTO; message berupa array. Pesan lain bergantung field yang gagal.",
+      "response": {
+        "status": 400,
+        "body": {
+          "message": ["username must be longer than or equal to 3 characters"],
+          "error": "Bad Request",
+          "statusCode": 400
+        }
+      }
+    },
+    {
+      "name": "invalidCredentials",
+      "appliesTo": "POST /api/v1/auth/login",
+      "response": {
+        "status": 401,
+        "body": {
+          "message": "Invalid credentials",
+          "error": "Unauthorized",
+          "statusCode": 401
+        }
+      }
+    },
+    {
+      "name": "missingBearer",
+      "appliesTo": "Semua endpoint protected",
+      "response": {
+        "status": 401,
+        "body": {
+          "message": "Bearer token required",
+          "error": "Unauthorized",
+          "statusCode": 401
+        }
+      }
+    },
+    {
+      "name": "invalidAccessToken",
+      "appliesTo": "Semua endpoint protected",
+      "response": {
+        "status": 401,
+        "body": {
+          "message": "Invalid or expired token",
+          "error": "Unauthorized",
+          "statusCode": 401
+        }
+      }
+    },
+    {
+      "name": "invalidRefreshToken",
+      "appliesTo": "POST /api/v1/auth/refresh",
+      "response": {
+        "status": 401,
+        "body": {
+          "message": "Invalid refresh token",
+          "error": "Unauthorized",
+          "statusCode": 401
+        }
+      }
+    },
+    {
+      "name": "csrfRequired",
+      "appliesTo": "Semua POST /api/v1/auth/*",
+      "response": {
+        "status": 403,
+        "body": {
+          "message": "X-CSRF-Protection: 1 header required",
+          "error": "Forbidden",
+          "statusCode": 403
+        }
+      }
+    },
+    {
+      "name": "forbiddenOrigin",
+      "appliesTo": "Semua POST /api/v1/auth/*",
+      "response": {
+        "status": 403,
+        "body": {
+          "message": "Origin not allowed",
+          "error": "Forbidden",
+          "statusCode": 403
+        }
+      }
+    },
+    {
+      "name": "insufficientRole",
+      "appliesTo": "Endpoint dengan role guard",
+      "response": {
+        "status": 403,
+        "body": {
+          "message": "Insufficient role",
+          "error": "Forbidden",
+          "statusCode": 403
+        }
+      }
+    },
+    {
+      "name": "crossOperatorDenied",
+      "appliesTo": "Tenant user memasang filter operatorId milik operator lain",
+      "response": {
+        "status": 403,
+        "body": {
+          "message": "Cross-operator access denied",
+          "error": "Forbidden",
+          "statusCode": 403
+        }
+      }
+    },
+    {
+      "name": "busNotFound",
+      "appliesTo": "GET /api/v1/cms/buses/{id}; PUT assignment bus",
+      "response": {
+        "status": 404,
+        "body": {
+          "message": "Bus not found",
+          "error": "Not Found",
+          "statusCode": 404
+        }
+      }
+    },
+    {
+      "name": "helpNotFound",
+      "appliesTo": "PATCH /api/v1/cms/help-reports/{id}/status, termasuk resource di luar scope",
+      "response": {
+        "status": 404,
+        "body": {
+          "message": "Help report not found",
+          "error": "Not Found",
+          "statusCode": 404
+        }
+      }
+    },
+    {
+      "name": "operatorConflict",
+      "appliesTo": "POST /api/v1/cms/operators",
+      "response": {
+        "status": 409,
+        "body": {
+          "message": "Operator code exists",
+          "error": "Conflict",
+          "statusCode": 409
+        }
+      }
+    },
+    {
+      "name": "usernameConflict",
+      "appliesTo": "POST /api/v1/cms/users",
+      "response": {
+        "status": 409,
+        "body": {
+          "message": "Username already exists",
+          "error": "Conflict",
+          "statusCode": 409
+        }
+      }
+    },
+    {
+      "name": "coreUnavailable",
+      "appliesTo": "Mutasi master data yang memanggil Core OBU API",
+      "response": {
+        "status": 502,
+        "body": {
+          "message": "Core OBU API unavailable",
+          "error": "Bad Gateway",
+          "statusCode": 502
+        }
+      }
+    },
+    {
+      "name": "databaseUnavailable",
+      "appliesTo": "GET /api/v1/health/ready",
+      "response": {
+        "status": 503,
+        "body": {
+          "message": "Database unavailable",
+          "error": "Service Unavailable",
+          "statusCode": 503
+        }
+      }
+    },
+    {
+      "name": "coreTimeout",
+      "appliesTo": "Mutasi master data yang memanggil Core OBU API",
+      "response": {
+        "status": 504,
+        "body": {
+          "message": "Core OBU API timeout",
+          "error": "Gateway Timeout",
+          "statusCode": 504
+        }
+      }
+    },
+    {
+      "name": "upstreamRejected",
+      "appliesTo": "Mutasi master data: HTTP 4xx upstream dipertahankan; status lain yang gagal dipetakan ke 502. Body ini tidak memakai envelope error Nest standar.",
+      "response": {
+        "status": 409,
+        "body": {
+          "message": "Core OBU API rejected request",
+          "upstreamStatus": 409
+        }
+      }
+    }
+  ]
+}

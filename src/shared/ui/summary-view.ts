@@ -3,10 +3,10 @@ import { number } from '../data/formatters';
 import { html } from './html';
 export function summaryCards(payload: unknown) {
   const defs: [string, string[]][] = [
-    ['Total armada', ['total', 'totalVehicles', 'vehicleCount', 'totalCount']],
+    ['Total armada', ['totalBuses', 'total', 'totalVehicles', 'vehicleCount', 'totalCount']],
     ['Beroperasi', ['active', 'activeCount']],
     ['Berhenti', ['idle', 'idleCount']],
-    ['Terlambat', ['delayed', 'delayedCount']],
+    ['Terlambat', ['delay', 'delayed', 'delayedCount']],
     ['Offline', ['offline', 'offlineCount']],
   ];
   const values = defs

@@ -55,11 +55,13 @@ Keputusan dan kontrak lifecycle ada di [docs/architecture.md](docs/architecture.
 
 ## Ringkasan dan peta
 
-Ringkasan berisi kartu kondisi armada serta jumlah bus, rute, perangkat, dan laporan bantuan. Super admin memperoleh kartu operator, pengguna, dan audit. Semua query memakai scope token dari backend; frontend tidak mengirim operator override. Total memakai metadata API; `—` berarti total tidak diberikan, bukan nol dan bukan jumlah isi halaman pertama.
+Ringkasan berisi kartu kondisi armada serta jumlah bus, rute, perangkat, dan laporan bantuan. Super admin memperoleh kartu operator, pengguna, dan audit. Semua query memakai scope token dari backend; frontend tidak mengirim operator override. Pagination mengikuti `hasMore`. Jumlah operasional dihitung dari halaman lengkap sampai batas 25 halaman per sumber; angka `≥` berarti batas bawah, sedangkan `—` berarti data belum tersedia.
 
 Peta memenuhi area workspace di bawah header. Marker biasa berbentuk ikon; kartu floating hanya muncul untuk bus dipilih atau overspeed, berisi bus, lat, lon, time bus, delay, dan speed. Overspeed mengikuti flag/peringatan atau batas kecepatan eksplisit dari API, tanpa ambang buatan frontend. Delay memakai nilai API atau selisih `receivedAt` terhadap waktu bus. Nilai yang tidak tersedia ditampilkan `—`.
 
-Waktu absolut memakai Asia/Jakarta dengan format `HH:mm:ss.SSS WIB`; delay memakai durasi `HH:mm:ss.SSS`. Peta membaca sampai 25 halaman × 200 kendaraan. Jika batas ini tercapai, ada pesan bahwa cakupan belum lengkap. Polling 15 detik tidak bertumpuk dan request dibatalkan ketika pindah halaman; ringkasan inventaris diperbarui setiap 60 detik. Modul peta dimuat melalui lazy import.
+Waktu absolut memakai Asia/Jakarta dengan format `HH:mm:ss.SSS WIB`; delay memakai durasi `HH:mm:ss.SSS`. Peta membaca sampai 25 halaman × 200 kendaraan. Jika batas ini tercapai, ada pesan bahwa cakupan belum lengkap dan tombol untuk memuat 25 halaman berikutnya. Polling 15 detik tidak bertumpuk dan request dibatalkan ketika pindah halaman; ringkasan inventaris diperbarui setiap 60 detik. Modul peta dimuat melalui lazy import.
+
+Lihat [audit contoh respons v1.1](docs/response-audit.md) untuk pemetaan field semua modul. Marker berbentuk bus; peta mendukung scroll/pinch/zoom dan fokus otomatis ke bus yang dipilih. Popup loading bersama mengikuti request paralel dan tidak menghalangi interaksi.
 
 ## Quality checks
 

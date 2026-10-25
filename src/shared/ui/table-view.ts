@@ -40,7 +40,7 @@ export function table(
                   const value = pick(row, ...c.names);
                   const text = escape(format(value, c.type));
                   return html`<td>
-                    ${c.type === 'status' || c.type === 'boolean' ? `<span class="status ${['ACTIVE', 'RESOLVED', 'CLOSED', 'true', 'READY'].includes(String(value)) ? 'green' : ['IDLE', 'DELAYED', 'OPEN', 'IN_PROGRESS'].includes(String(value)) ? 'amber' : 'gray'}">${text}</span>` : text}
+                    ${c.type === 'status' || c.type === 'boolean' ? `<span class="status ${['ACTIVE', 'RESOLVED', 'CLOSED', 'true', 'READY'].includes(String(value)) ? 'green' : ['IDLE', 'DELAY', 'DELAYED', 'OPEN', 'IN_PROGRESS'].includes(String(value)) ? 'amber' : 'gray'}">${text}</span>` : text}
                   </td>`;
                 })
                 .join(

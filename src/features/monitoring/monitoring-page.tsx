@@ -1,3 +1,4 @@
+import { ResponseContext } from '../../shared/ui/response-context';
 import { useCallback, useState } from 'react';
 import type { AuthClient } from '../../core/auth/client';
 import type { TablePage } from '../../core/types';
@@ -26,7 +27,7 @@ export function MonitoringPage({
       const payload = await (view === 'fleet'
         ? api.fleet({ ...page, status }, signal)
         : api.alerts(signal));
-      return view === 'alerts' ? alertRows(payload) : payload;
+      return payload;
     },
     [auth, view, page, status],
   );
@@ -66,7 +67,7 @@ export function MonitoringPage({
             Status kendaraan
             <select name="status" value={draft} onChange={(event) => setDraft(event.target.value)}>
               <option value="">Semua status</option>
-              {['ACTIVE', 'IDLE', 'DELAYED', 'OFFLINE'].map((value) => (
+              {['ACTIVE', 'IDLE', 'DELAY', 'OFFLINE'].map((value) => (
                 <option key={value} value={value}>
                   {statusText(value)}
                 </option>
@@ -92,6 +93,7 @@ export function MonitoringPage({
           </div>
         </form>
       ) : null}
+      <ResponseContext payload={state.data} />
       <section className="panel monitor-panel">
         <div className="panel-heading">
           <div>
@@ -114,7 +116,7 @@ export function MonitoringPage({
         ) : null}
         <div id={id + '-body'} className="monitor-body">
           <DataTableView
-            payload={state.data}
+            payload={view === 'alerts' ? alertRows(state.data) : state.data}
             kind={id}
             remote={view === 'fleet'}
             serverSearch={view === 'fleet'}

@@ -1,3 +1,6 @@
+import { withActivity } from '../../core/activity/store';
+import { readCollection } from '../../shared/data/collection';
+import { items } from '../../shared/data/records';
 import type { ApiClient } from '../../core/api/client';
 import type { ModuleDefinition } from './definitions';
 import { buildListPath, recordPath, recordId } from './definitions';
@@ -34,9 +37,11 @@ export function managementApi(api: ApiClient) {
           ['Database', '/health/ready'],
         ].map(async ([label, path]) => {
           try {
-            const response = await fetch(base + path, {
-              signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
-            });
+            const response = await withActivity(() =>
+              fetch(base + path, {
+                signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
+              }),
+            );
             return { label, ready: response.ok };
           } catch {
             return { label, ready: false };
@@ -56,11 +61,17 @@ export function lookupEndpoint(type: string): string {
         ? '/cms/operators'
         : '/cms/devices';
 }
-export async function loadLookup(api: ApiClient, type: string, query: string, signal: AbortSignal) {
+export async function loadLookup(
+  api: ApiClient,
+  type: string,
+  query: string,
+  signal: AbortSignal,
+  page = 1,
+) {
   return api.request(
     lookupEndpoint(type) +
       '?' +
-      new URLSearchParams({ page: '1', limit: '200', ...(query ? { q: query } : {}) }),
+      new URLSearchParams({ page: String(page), limit: '200', ...(query ? { q: query } : {}) }),
     { signal },
   );
 }
@@ -86,4 +97,30 @@ export function mutationEndpoint(
       (options.action === 'rotate' ? '/rotate-token' : (options.suffix ?? ''))
     );
   return spec.path;
+}
+
+export async function loadModule(
+  api: ApiClient,
+  endpoint: string,
+  signal: AbortSignal,
+  resolveOperators = false,
+): Promise<unknown> {
+  const payload = await api.request(endpoint, { signal });
+  if (!resolveOperators) return payload;
+  const rows = items(payload);
+  if (!rows?.length) return payload;
+  // This enrichment is only used by the SUPER_ADMIN users module.
+  try {
+    const operators = await readCollection(api, '/cms/operators?limit=200', signal);
+    const names = new Map(operators.rows.map((row) => [String(row.id), row.name ?? row.code]));
+    return {
+      users: rows.map((row) => ({
+        ...row,
+        operatorName: names.get(String(row.operatorId)) ?? row.operatorName,
+      })),
+    };
+  } catch (error) {
+    if (signal.aborted) throw error;
+    return payload;
+  }
 }

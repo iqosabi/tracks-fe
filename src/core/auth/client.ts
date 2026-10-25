@@ -1,3 +1,4 @@
+import { withActivity } from '../activity/store';
 import { time } from '../../shared/data/formatters';
 import { z } from 'zod';
 import { ApiError, responseError } from '../api/errors';
@@ -54,11 +55,12 @@ function browserLocks(): LockProvider | null {
 export function createAuth(options: AuthOptions): AuthClient {
   const {
     base,
-    fetcher = fetch,
+    fetcher: transport = fetch,
     locks = browserLocks(),
     storage = browserStorage(),
     onChange = () => {},
   } = options;
+  const fetcher: typeof fetch = (input, init) => withActivity(() => transport(input, init));
   const channel =
     options.channel === undefined
       ? typeof BroadcastChannel === 'function'

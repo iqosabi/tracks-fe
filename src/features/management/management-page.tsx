@@ -1,3 +1,4 @@
+import { ResponseContext } from '../../shared/ui/response-context';
 import { ManagementModal } from './management-modal';
 import type { Modal, Ownership } from './types';
 import { useCallback, useMemo, useState } from 'react';
@@ -18,7 +19,7 @@ import {
   validateDates,
   type ModuleId,
 } from './definitions';
-import { managementApi, listEndpoint } from './api';
+import { managementApi, listEndpoint, loadModule } from './api';
 import { Field } from './fields';
 interface Props {
   id: ModuleId;
@@ -41,20 +42,27 @@ export function ManagementPage({ id, auth, revision, notify }: Props) {
   const writable =
     canWrite(spec, role) &&
     !['usage', 'history', 'audit', 'operatorSummary', 'account', 'health'].includes(id);
+  const paginated =
+    !!context || (!!spec.paginated && !(id === 'usage' && path === '/monitoring/usage/summary'));
   const allowed = !spec.super || role === 'SUPER_ADMIN';
   const load = useCallback(
     async (signal: AbortSignal) => {
       if (spec.health) return { health: await api.health(readConfig().cmsBase, signal) };
-      return api.request(
-        listEndpoint(context ? { ...spec, paginated: true } : spec, {
-          ...tablePage,
-          filters,
-          path,
-        }),
-        { signal },
+      return loadModule(
+        api,
+        listEndpoint(
+          { ...spec, paginated },
+          {
+            ...tablePage,
+            filters,
+            path,
+          },
+        ),
+        signal,
+        id === 'users' && role === 'SUPER_ADMIN',
       );
     },
-    [api, spec, tablePage, filters, path, context],
+    [api, spec, tablePage, filters, path, context, paginated, id, role],
   );
   const state = useRequest(
     load,
@@ -255,6 +263,7 @@ export function ManagementPage({ id, auth, revision, notify }: Props) {
           ''
         )}
       </div>
+      <ResponseContext payload={state.data} />
       <section className="panel module-panel">
         <div id="module-data">
           {spec.health ? (
@@ -290,7 +299,7 @@ export function ManagementPage({ id, auth, revision, notify }: Props) {
               key={`${id}:${path}:${formKey}`}
               kind={context?.kind ?? spec.kind}
               payload={state.data}
-              remote={!!spec.paginated || !!context}
+              remote={paginated}
               serverSearch={!!spec.search}
               page={tablePage}
               busy={state.busy}

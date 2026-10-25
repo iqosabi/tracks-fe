@@ -1,3 +1,4 @@
+import { LoadingPopup } from '../shared/ui/loading-popup';
 import { ErrorBoundary } from './error-boundary';
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -130,6 +131,7 @@ export function startApplication(element: HTMLElement, toastElement: HTMLElement
   root.render(
     <ErrorBoundary>
       <Application notify={toast.notify} />
+      <LoadingPopup />
     </ErrorBoundary>,
   );
   return {

@@ -65,14 +65,17 @@ export function MapPage({
   revision: number;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [pageLimit, setPageLimit] = useState(25);
+  const [focusRequest, setFocusRequest] = useState(0);
   const [search, setSearch] = useState('');
   const select = useCallback((id: string) => {
     setSelectedId(id);
+    setFocusRequest((value) => value + 1);
     setSearch('');
   }, []);
   const load = useCallback(
     async (signal: AbortSignal) => {
-      if (!demo) return loadMap(apiFor(auth), signal);
+      if (!demo) return loadMap(apiFor(auth), signal, pageLimit);
       return {
         positions: demoPositions.map((p, index) => ({
           ...p,
@@ -86,7 +89,7 @@ export function MapPage({
         alertError: '',
       };
     },
-    [auth, demo],
+    [auth, demo, pageLimit],
   );
   const state = usePolling(load, 15000, revision);
   const positions = state.data?.positions ?? noPositions;
@@ -104,6 +107,7 @@ export function MapPage({
         selectedId={selected?.id ?? null}
         onSelect={select}
         demo={demo}
+        focusRequest={focusRequest}
       />
       <div className="map-controls">
         <label className="field">
@@ -119,6 +123,15 @@ export function MapPage({
         <button className="button secondary" disabled={state.busy} onClick={state.refresh}>
           {state.busy ? 'Memuat…' : 'Perbarui'}
         </button>
+        {state.data?.truncated ? (
+          <button
+            className="button secondary"
+            disabled={state.busy}
+            onClick={() => setPageLimit((value) => value + 25)}
+          >
+            Muat armada berikutnya
+          </button>
+        ) : null}
         <small role="status">
           {demo ? 'Demo · ' : ''}
           {state.updatedAt ? time(state.updatedAt) : 'Menghubungkan…'}
@@ -143,7 +156,7 @@ export function MapPage({
             ? `${state.error}${state.data ? ' Posisi sebelumnya mungkin sudah tidak terbaru.' : ''}`
             : ''}
           {state.data?.truncated
-            ? ' Ditampilkan maksimal 5.000 kendaraan; cakupan belum lengkap.'
+            ? ` Cakupan belum lengkap setelah ${pageLimit} halaman. Gunakan tombol Muat armada berikutnya.`
             : ''}
           {state.data?.alertError ? ` Data overspeed belum lengkap: ${state.data.alertError}` : ''}
         </div>

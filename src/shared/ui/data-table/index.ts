@@ -1,7 +1,8 @@
 import { html } from '../html';
 import type { ApiRecord, TablePage, Disposable } from '../../../core/types';
 import type { RowActions } from '../../data/presentation';
-import { record } from '../../data/guards';
+import { paginationMeta } from '../../data/pagination';
+export { paginationMeta } from '../../data/pagination';
 import { query as domQuery } from '../dom';
 import { table, items, columns, pick, format, number, escape } from '../../data/presentation';
 
@@ -19,24 +20,6 @@ export function filterReadableRows(rows: ApiRecord[], kind: string, query: strin
         ),
     );
 }
-export function paginationMeta(payload: unknown, page: number, limit: number, count: number) {
-  const value = record(payload);
-  const meta = record(value.pagination ?? value.meta ?? value);
-  const numeric = (v: unknown) =>
-    v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v)) && Number(v) >= 0
-      ? Number(v)
-      : null;
-  const total = numeric(meta.totalItems ?? meta.total ?? value.totalItems ?? value.total);
-  const reported = numeric(meta.totalPages ?? value.totalPages);
-  const totalPages =
-    reported !== null
-      ? Math.max(1, reported)
-      : total !== null
-        ? Math.max(1, Math.ceil(total / limit))
-        : null;
-  return { total, totalPages, hasNext: totalPages !== null ? page < totalPages : count >= limit };
-}
-
 interface DataTableOptions {
   element: HTMLElement;
   kind?: string;

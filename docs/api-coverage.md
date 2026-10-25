@@ -1,6 +1,6 @@
 # Cakupan kontrak API
 
-Sumber: collection Postman pengguna, 24 Oktober 2026. OpenAPI remote belum dapat diakses. Dokumen ini tidak mengklaim endpoint di luar collection. Script dan environment berisi kredensial tidak dijalankan atau dimasukkan ke repo.
+Sumber: collection Postman pengguna, 24 Oktober 2026, serta contoh respons sintetis CMS v1.1 dari pengguna, 25 Oktober 2026. OpenAPI remote belum dapat diakses. Dokumen ini tidak mengklaim endpoint di luar collection. Script dan environment berisi kredensial tidak dijalankan atau dimasukkan ke repo.
 
 43 endpoint di 10 kelompok tercakup oleh navigasi dan aksi FE. Pengujian end-to-end menggunakan server mock; integrasi staging dan bentuk respons aktual tetap perlu diverifikasi.
 
@@ -49,3 +49,5 @@ Sumber: collection Postman pengguna, 24 Oktober 2026. OpenAPI remote belum dapat
 | CMS Users           | `POST /cms/users`                                           | Pengguna                                                                                          |
 | CMS Users           | `PATCH /cms/users/{{userId}}`                               | Pengguna                                                                                          |
 | CMS Audit           | `GET /cms/audit`                                            | Log audit                                                                                         |
+
+Pemetaan respons dan batas verifikasi terbaru ada di [audit contoh respons](response-audit.md).

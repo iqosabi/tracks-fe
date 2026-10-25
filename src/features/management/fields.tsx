@@ -1,3 +1,4 @@
+import { paginationMeta } from '../../shared/data/pagination';
 import { loadLookup } from './api';
 import { useEffect, useState } from 'react';
 import type { ApiClient } from '../../core/api/client';
@@ -19,23 +20,33 @@ interface Props {
 }
 function LookupField({ field, row = {}, editing, filtering, api, role, disabled }: Props) {
   const [query, setQuery] = useState(''),
+    [page, setPage] = useState(1),
+    [hasMore, setHasMore] = useState(false),
+    [busy, setBusy] = useState(false),
     [rows, setRows] = useState<ApiRecord[]>([]),
     [error, setError] = useState(''),
     [value, setValue] = useState(String(row[field.key] ?? ''));
   useEffect(() => {
     if (field.type === 'operator' && role !== 'SUPER_ADMIN') return;
     const abort = new AbortController();
+    setBusy(true);
     const timer = setTimeout(
       () => {
-        void loadLookup(api, field.type, query, abort.signal)
+        void loadLookup(api, field.type, query, abort.signal, page)
           .then((payload) => {
             if (!abort.signal.aborted) {
-              setRows(items(payload) ?? []);
+              const batch = items(payload) ?? [];
+              setRows((previous) => (page === 1 ? batch : [...previous, ...batch]));
+              setHasMore(paginationMeta(payload, page, 200, batch.length).hasNext);
+              setBusy(false);
               setError('');
             }
           })
           .catch((reason: unknown) => {
-            if (!abort.signal.aborted) setError(messageOf(reason));
+            if (!abort.signal.aborted) {
+              setError(messageOf(reason));
+              setBusy(false);
+            }
           });
       },
       query ? 300 : 0,
@@ -44,7 +55,7 @@ function LookupField({ field, row = {}, editing, filtering, api, role, disabled 
       clearTimeout(timer);
       abort.abort();
     };
-  }, [api, query, field.type, role]);
+  }, [api, query, field.type, role, page]);
   if (field.type === 'operator' && role !== 'SUPER_ADMIN') return null;
   const options = rows.flatMap((row) => {
     const id =
@@ -76,7 +87,10 @@ function LookupField({ field, row = {}, editing, filtering, api, role, disabled 
           type="search"
           aria-label={`Cari pilihan ${field.label.toLowerCase()}`}
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setPage(1);
+          }}
           placeholder="Cari pilihan…"
         />
       </details>
@@ -100,6 +114,16 @@ function LookupField({ field, row = {}, editing, filtering, api, role, disabled 
           </option>
         ))}
       </select>
+      {hasMore ? (
+        <button
+          type="button"
+          className="button secondary"
+          disabled={busy}
+          onClick={() => setPage((value) => value + 1)}
+        >
+          Muat pilihan berikutnya
+        </button>
+      ) : null}
       <small data-lookup-note>{error}</small>
     </label>
   );

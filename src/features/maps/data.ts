@@ -54,6 +54,7 @@ export function busPositions(rows: ApiRecord[], alerts: unknown): BusPosition[] 
     const id = identity(row) || `${String(vehicleName(row))}:${lat}:${lng}`;
     const busTime = pick(
       row,
+      'deviceTimestamp',
       'deviceTime',
       'busTime',
       'recordedAt',

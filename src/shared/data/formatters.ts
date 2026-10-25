@@ -1,4 +1,6 @@
 export type ValueFormat =
+  | 'day'
+  | 'degrees'
   | 'text'
   | 'bytes'
   | 'date'
@@ -86,6 +88,7 @@ const statuses: Record<string, string> = {
   ACTIVE: 'Beroperasi',
   IDLE: 'Berhenti',
   DELAYED: 'Terlambat',
+  DELAY: 'Terlambat',
   OFFLINE: 'Offline',
   OVERSPEED: 'Melebihi batas',
   OPEN: 'Terbuka',
@@ -109,6 +112,20 @@ export function format(value: unknown, type: ValueFormat = 'text'): string {
   if (value === null || value === undefined || value === '') return '—';
   if (type === 'bytes') return bytes(value);
   if (type === 'date') return date(value);
+  if (type === 'day') {
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(String(value))
+      ? validDate(String(value) + 'T00:00:00+07:00')
+      : null;
+    return d
+      ? new Intl.DateTimeFormat('id-ID', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          timeZone: 'Asia/Jakarta',
+        }).format(d)
+      : '—';
+  }
+  if (type === 'degrees') return number(value, 1) + '°';
   if (type === 'boolean') return value === true ? 'Aktif' : value === false ? 'Nonaktif' : '—';
   if (type === 'status') return statusText(value);
   if (type === 'number') return number(value);

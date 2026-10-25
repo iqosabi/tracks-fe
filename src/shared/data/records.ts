@@ -20,7 +20,15 @@ export function pick(row: unknown, ...names: string[]): unknown {
 export function items(value: unknown): ApiRecord[] | null {
   if (Array.isArray(value)) return value.every(isRecord) ? value : null;
   const payload = record(value);
-  for (const candidate of [payload.items, record(payload.data).items, payload.data])
+  for (const candidate of [
+    payload.items,
+    payload.users,
+    payload.operators,
+    record(payload.data).items,
+    record(payload.data).users,
+    record(payload.data).operators,
+    payload.data,
+  ])
     if (Array.isArray(candidate)) return candidate.every(isRecord) ? candidate : null;
   return null;
 }

@@ -6,11 +6,13 @@ export function FleetCanvas({
   selectedId,
   onSelect,
   demo,
+  focusRequest,
 }: {
   positions: BusPosition[];
   selectedId: string | null;
   onSelect: (id: string) => void;
   demo: boolean;
+  focusRequest: number;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<FleetMap | null>(null);
@@ -33,6 +35,6 @@ export function FleetCanvas({
   }, [positions, selectedId]);
   useEffect(() => {
     if (selectedId) map.current?.focus(selectedId);
-  }, [selectedId]);
+  }, [selectedId, focusRequest]);
   return <div className="fleet-full-canvas" ref={container} />;
 }
