@@ -4,6 +4,8 @@ import { record } from '../../shared/data/guards';
 import type { FleetPosition } from './fleet-map';
 export interface BusPosition extends FleetPosition {
   id: string;
+  operatorLabel?: string;
+  routeCode?: string;
   overspeed: boolean;
   speed: number | null;
   busTime: unknown;
@@ -75,6 +77,10 @@ export function busPositions(rows: ApiRecord[], alerts: unknown): BusPosition[] 
     return [
       {
         id,
+        operatorLabel: String(
+          pick(row, 'operatorName', 'operator.name', 'operatorCode', 'operator') ?? '',
+        ),
+        routeCode: String(pick(row, 'routeCode') ?? ''),
         lat,
         lng,
         label: String(vehicleName(row) ?? 'Kendaraan'),

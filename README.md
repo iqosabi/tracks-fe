@@ -61,7 +61,7 @@ Peta memenuhi area workspace di bawah header. Marker biasa berbentuk ikon; kartu
 
 Waktu absolut memakai Asia/Jakarta dengan format `HH:mm:ss.SSS WIB`; delay memakai durasi `HH:mm:ss.SSS`. Peta membaca sampai 25 halaman × 200 kendaraan. Jika batas ini tercapai, ada pesan bahwa cakupan belum lengkap dan tombol untuk memuat 25 halaman berikutnya. Polling 15 detik tidak bertumpuk dan request dibatalkan ketika pindah halaman; ringkasan inventaris diperbarui setiap 60 detik. Modul peta dimuat melalui lazy import.
 
-Lihat [audit contoh respons v1.1](docs/response-audit.md) untuk pemetaan field semua modul. Marker berbentuk bus; peta mendukung scroll/pinch/zoom dan fokus otomatis ke bus yang dipilih. Popup loading bersama mengikuti request paralel dan tidak menghalangi interaksi.
+Lihat [audit contoh respons v1.1](docs/response-audit.md) untuk pemetaan field semua modul. Tampilan peta mengikuti referensi: basemap CARTO Dark/Light, filter operator/rute/status di atas, legenda di bawah, dan detail floating di kanan. Simbol bus berukuran 14–32 px sesuai zoom; label umum muncul mulai zoom 12 dan label bus dipilih/overspeed tetap terlihat. Area klik tetap 44 px. Peta mendukung scroll/pinch/zoom dan fokus otomatis ke bus yang dipilih. Popup loading bersama mengikuti request paralel dan tidak menghalangi interaksi. Filter peta bekerja atas bus yang telah dimuat dalam scope sesi. Contoh API belum memuat koordinat halte atau geometri jalur, sehingga jalur/halte, satelit, dan mode 3D pada referensi tidak dibuat sebagai fitur/data palsu.
 
 ## Quality checks
 

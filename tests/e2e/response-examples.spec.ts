@@ -15,11 +15,11 @@ test('uploaded response examples render every read module; loading, bus markers,
     releaseSummary = resolve;
   });
   await page.route('https://*.basemaps.cartocdn.com/**', (route) => {
-    const match = new URL(route.request().url()).pathname.match(/light_all\/(\d+)\//);
+    const match = new URL(route.request().url()).pathname.match(/(?:light|dark)_all\/(\d+)\//);
     if (match) tileZooms.push(Number(match[1]));
     return route.fulfill({
       contentType: 'image/svg+xml',
-      body: '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#f1f3f2"/></svg>',
+      body: `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="${route.request().url().includes('/dark_all/') ? '#101316' : '#f1f3f2'}"/><path d="M0 75h256M0 175h256M70 0v256M180 0v256" stroke="${route.request().url().includes('/dark_all/') ? '#263442' : '#fff'}" stroke-width="3"/></svg>`,
     });
   });
   await page.route('https://tracksmon-dev-api.aestaworks.com/**', async (route) => {
@@ -121,6 +121,12 @@ test('uploaded response examples render every read module; loading, bus markers,
   await nav('map');
   await expect(page.locator('.fleet-map-marker')).toHaveCount(2);
   await expect(page.locator('.bus-marker-icon')).toHaveCount(2);
+  await expect(page.locator('.reference-map')).toHaveClass(/map-theme-dark/);
+  const symbol = page.locator('.fleet-map-marker[title=BUS-002] .bus-marker-symbol');
+  const initialSymbolSize = await symbol.evaluate((el) => el.getBoundingClientRect().width);
+  await page.getByRole('combobox', { name: 'Operator di peta' }).selectOption('AMJ');
+  await page.getByRole('combobox', { name: 'Rute di peta' }).selectOption('R01');
+  await expect(page.locator('.fleet-map-marker')).toHaveCount(2);
   await page.getByRole('searchbox', { name: 'Cari bus di peta' }).fill('BUS-002');
   await page.locator('.map-search-results').getByRole('button', { name: 'BUS-002' }).click();
   const card = page.locator('.floating-bus-card[data-selected=true]');
@@ -139,9 +145,16 @@ test('uploaded response examples render every read module; loading, bus markers,
     expect(
       Math.abs(markerBox.x + markerBox.width / 2 - (canvasBox.x + canvasBox.width / 2)),
     ).toBeLessThan(6);
+  await expect
+    .poll(async () => symbol.evaluate((el) => el.getBoundingClientRect().width))
+    .toBeGreaterThan(initialSymbolSize);
+  const sizeBeforeZoom = await symbol.evaluate((el) => el.getBoundingClientRect().width);
   const previous = Math.max(...tileZooms);
   await page.locator('.leaflet-control-zoom-in').click();
   await expect.poll(() => Math.max(...tileZooms)).toBeGreaterThan(previous);
+  await expect
+    .poll(async () => symbol.evaluate((el) => el.getBoundingClientRect().width))
+    .toBeGreaterThan(sizeBeforeZoom);
   const next = Math.max(...tileZooms);
   if (canvasBox) {
     await page.mouse.move(canvasBox.x + 120, canvasBox.y + 200);
@@ -160,8 +173,28 @@ test('uploaded response examples render every read module; loading, bus markers,
         : Infinity;
     })
     .toBeLessThan(6);
+  await page.getByRole('button', { name: 'Light', exact: true }).click();
+  await expect(page.locator('.reference-map')).toHaveClass(/map-theme-light/);
+  await expect(card).toContainText('BUS-002');
+  await page.getByRole('button', { name: 'Dark', exact: true }).click();
+  await expect(page.locator('.reference-map')).toHaveClass(/map-theme-dark/);
+  await page.getByRole('combobox', { name: 'Status di peta' }).selectOption('OFFLINE');
+  await expect(page.locator('.fleet-map-marker')).toHaveCount(0);
+  await expect(page.locator('.floating-bus-card')).toHaveCount(0);
+  await page.getByRole('combobox', { name: 'Status di peta' }).selectOption('');
+  await expect(page.locator('.fleet-map-marker')).toHaveCount(2);
   await page.screenshot({ path: testInfo.outputPath('response-map-desktop.png') });
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('searchbox', { name: 'Cari bus di peta' }).fill('BUS-002');
+  await page.locator('.map-search-results').getByRole('button', { name: 'BUS-002' }).click();
+  await expect
+    .poll(async () => {
+      const busBox = await marker.boundingBox(),
+        detailBox = await card.boundingBox();
+      return !!busBox && !!detailBox && busBox.y + busBox.height < detailBox.y;
+    })
+    .toBe(true);
+  await page.screenshot({ path: testInfo.outputPath('response-map-mobile.png') });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
 });

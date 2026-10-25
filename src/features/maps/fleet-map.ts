@@ -1,7 +1,7 @@
-import { statusText, number } from '../../shared/data/presentation';
 import * as L from 'leaflet';
 import { getCartoKey } from '../../core/config/runtime';
 import { query } from '../../shared/ui/dom';
+import { markerHtml, markerSize, type MapTheme } from './marker-layout';
 export { getCartoKey } from '../../core/config/runtime';
 export interface FleetPosition {
   lat: number;
@@ -16,14 +16,9 @@ export interface FleetMap {
   update(data: FleetPosition[]): void;
   fit(): void;
   focus(id: string): void;
+  setTheme(theme: MapTheme): void;
   destroy(): void;
 }
-
-const escape = (v: unknown) =>
-  String(v ?? '').replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
-  );
 export const demoPositions: FleetPosition[] = [
   { lat: -6.244, lng: 106.8, label: 'TRK-001', status: 'ACTIVE' },
   { lat: -6.198, lng: 106.823, label: 'TRK-002', status: 'ACTIVE' },
@@ -37,11 +32,10 @@ export function createFleetMap(
   {
     onSelect = () => {},
     demo = false,
-    floating = false,
   }: { onSelect?: (position: FleetPosition) => void; demo?: boolean; floating?: boolean } = {},
 ): FleetMap {
   container.innerHTML =
-    '<div class="carto-canvas" aria-label="Peta armada CARTO interaktif"></div><div class="map-status" role="status">Memuat peta CARTO…</div><button type="button" class="map-fit" aria-label="Tampilkan semua kendaraan">⊞ <span>Semua armada</span></button><div class="map-key"><span><i class="dot green"></i>Aktif</span><span><i class="dot amber"></i>Berhenti / tertunda</span><span><i class="dot gray"></i>Offline</span></div>';
+    '<div class="carto-canvas" aria-label="Peta armada CARTO interaktif"></div><div class="map-status" role="status">Memuat peta CARTO…</div><button type="button" class="map-fit" aria-label="Tampilkan semua kendaraan">⊞ <span>Semua armada</span></button><div class="map-key"><span><i class="map-status-dot normal"></i>Normal</span><span><i class="map-status-dot delay"></i>Delay / berhenti</span><span><i class="map-status-dot offline"></i>Tidak aktif</span><span><i class="map-status-dot overspeed"></i>Overspeed</span></div>';
   const status = query('.map-status', container);
   const map = L.map(query('.carto-canvas', container), {
     scrollWheelZoom: true,
@@ -53,26 +47,25 @@ export function createFleetMap(
     markerZoomAnimation: false,
   }).setView([-6.21, 106.827], 12);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
-  const cartoKey = getCartoKey();
-  const tiles = L.tileLayer(
-    'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png' +
-      (cartoKey ? '?key=' + encodeURIComponent(cartoKey) : ''),
-    {
-      subdomains: 'abcd',
-      maxZoom: 20,
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>',
-    },
-  ).addTo(map);
+  const key = getCartoKey();
+  const tileUrl = (theme: MapTheme) =>
+    `https://{s}.basemaps.cartocdn.com/${theme === 'dark' ? 'dark_all' : 'light_all'}/{z}/{x}/{y}{r}.png${key ? '?key=' + encodeURIComponent(key) : ''}`;
+  const tiles = L.tileLayer(tileUrl('dark'), {
+    subdomains: 'abcd',
+    maxZoom: 20,
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>',
+  }).addTo(map);
+  const layer = L.layerGroup().addTo(map);
   let removed = false,
     failed = false,
     hasLoaded = false,
-    layer = L.layerGroup().addTo(map),
     initial = true;
+  let currentTheme: MapTheme = 'dark';
   let positions: FleetPosition[] = [];
-  const refreshStatus = () => {
+  function refreshStatus() {
     status.textContent =
-      (!cartoKey
+      (!key
         ? 'Key CARTO belum diatur · buka Pengaturan. '
         : failed && !hasLoaded
           ? 'Basemap belum dapat dimuat · periksa koneksi. '
@@ -82,7 +75,7 @@ export function createFleetMap(
         : positions.length
           ? positions.length + ' kendaraan dengan GPS'
           : 'Belum ada posisi GPS');
-  };
+  }
   tiles.on('tileerror', () => {
     failed = true;
     refreshStatus();
@@ -91,13 +84,23 @@ export function createFleetMap(
     hasLoaded = true;
     refreshStatus();
   });
+  function resizeMarkers() {
+    container.style.setProperty('--bus-marker-size', markerSize(map.getZoom()) + 'px');
+    container.style.setProperty(
+      '--bus-label-size',
+      Math.max(8, Math.min(11, 7 + map.getZoom() / 6)) + 'px',
+    );
+    container.classList.toggle('labels-hidden', map.getZoom() < 12);
+  }
+  map.on('zoomend', resizeMarkers);
+  resizeMarkers();
   function fit() {
     if (positions.length === 1)
       map.setView([positions[0].lat, positions[0].lng], 15, { animate: false });
     else if (positions.length > 1)
       map.fitBounds(
         positions.map((p) => [p.lat, p.lng]),
-        { padding: [60, 65], maxZoom: 15, animate: false },
+        { padding: [70, 90], maxZoom: 15, animate: false },
       );
   }
   query('.map-fit', container).onclick = fit;
@@ -115,38 +118,25 @@ export function createFleetMap(
           Math.abs(p.lng) <= 180,
       );
       layer.clearLayers();
-      for (const p of positions) {
-        const state = String(p.status || '').toUpperCase(),
-          tone =
-            state === 'OFFLINE'
-              ? 'offline'
-              : state === 'IDLE' || state === 'DELAY' || state === 'DELAYED'
-                ? 'idle'
-                : 'active';
-        const label = escape(p.label || 'Kendaraan');
-        const marker = L.marker([p.lat, p.lng], {
+      for (const position of positions) {
+        const marker = L.marker([position.lat, position.lng], {
           icon: L.divIcon({
-            className: 'fleet-map-marker' + (floating ? ' compact-marker' : ''),
-            html: `<span class="map-vehicle-pill ${tone} ${p.overspeed ? 'overspeed' : ''} ${p.selected ? 'selected' : ''}"><svg class="bus-marker-icon" viewBox="0 0 32 36" aria-hidden="true"><rect x="4" y="2" width="24" height="29" rx="6" fill="currentColor"/><rect x="7" y="7" width="18" height="12" rx="2" fill="white"/><path d="M16 7v12" stroke="currentColor" stroke-width="2"/><rect x="10" y="3.5" width="12" height="2" rx="1" fill="white"/><circle cx="9" cy="25" r="2" fill="white"/><circle cx="23" cy="25" r="2" fill="white"/><path d="M11 27h10" stroke="white" stroke-width="2"/><rect x="6" y="30" width="5" height="5" rx="1.5" fill="#222"/><rect x="21" y="30" width="5" height="5" rx="1.5" fill="#222"/><path d="M2 11v7m28-7v7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>${!floating || p.overspeed || p.selected ? label : ''}</span>`,
-            iconSize: floating ? [44, 48] : [115, 38],
-            iconAnchor: floating ? [22, 24] : [57, 19],
+            className: 'fleet-map-marker compact-marker',
+            html: markerHtml(position),
+            iconSize: [44, 44],
+            iconAnchor: [22, 22],
           }),
-          title: String(p.label),
+          title: position.label,
           keyboard: true,
         }).addTo(layer);
-        if (!floating)
-          marker.bindPopup(
-            `<div class="map-popup"><small>${demo ? 'DEMO VEHICLE' : 'FLEET MONITORING'}</small><strong>${label}</strong><p>${escape(statusText(p.status || 'Status tidak tersedia'))}</p><span>Lat ${number(p.lat, 6)} · Lon ${number(p.lng, 6)}</span></div>`,
-          );
-        marker.on('click', () => onSelect(p));
-        if (floating)
-          marker.getElement()?.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              event.stopPropagation();
-              onSelect(p);
-            }
-          });
+        marker.on('click', () => onSelect(position));
+        marker.getElement()?.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            event.stopPropagation();
+            onSelect(position);
+          }
+        });
       }
       refreshStatus();
       if (initial && positions.length) {
@@ -157,12 +147,24 @@ export function createFleetMap(
     fit,
     focus(id) {
       const position = positions.find((p) => p.id === id);
-      if (position)
+      if (position) {
         map.setView([position.lat, position.lng], Math.max(map.getZoom(), 16), { animate: false });
+        // Leave the selected bus above the bottom detail panel on narrow screens.
+        if (map.getSize().x < 700)
+          map.panBy([0, Math.round(map.getSize().y * 0.18)], { animate: false });
+      }
+    },
+    setTheme(theme) {
+      if (theme === currentTheme) return;
+      currentTheme = theme;
+      failed = false;
+      hasLoaded = false;
+      tiles.setUrl(tileUrl(theme));
     },
     destroy() {
       removed = true;
       observer.disconnect();
+      map.off('zoomend', resizeMarkers);
       map.stop();
       map.remove();
     },

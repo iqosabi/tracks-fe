@@ -1,4 +1,7 @@
-import { useCallback, useState } from 'react';
+import './map.css';
+import { readPreference, writePreference } from '../../core/config/storage';
+import type { MapTheme } from './marker-layout';
+import { useCallback, useMemo, useState } from 'react';
 import type { AuthClient } from '../../core/auth/client';
 import { apiFor } from '../../core/api/client';
 import { usePolling } from '../../shared/hooks/use-polling';
@@ -64,6 +67,12 @@ export function MapPage({
   demo: boolean;
   revision: number;
 }) {
+  const [theme, setTheme] = useState<MapTheme>(() =>
+    readPreference('tracks-map-theme') === 'light' ? 'light' : 'dark',
+  );
+  const [operator, setOperator] = useState('');
+  const [route, setRoute] = useState('');
+  const [status, setStatus] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pageLimit, setPageLimit] = useState(25);
   const [focusRequest, setFocusRequest] = useState(0);
@@ -92,22 +101,42 @@ export function MapPage({
     [auth, demo, pageLimit],
   );
   const state = usePolling(load, 15000, revision);
-  const positions = state.data?.positions ?? noPositions;
-  const selected = positions.find((p) => p.id === selectedId);
-  const overspeed = positions.filter((p) => p.overspeed && p.id !== selected?.id);
+  const positions: BusPosition[] = state.data?.positions ?? noPositions;
+  const operators = [
+    ...new Set(positions.map((p) => p.operatorLabel).filter((value): value is string => !!value)),
+  ].sort();
+  const routes = [
+    ...new Set(positions.map((p) => p.routeCode).filter((value): value is string => !!value)),
+  ].sort();
+  const visible = useMemo(
+    () =>
+      positions.filter(
+        (p) =>
+          (!operator || p.operatorLabel === operator) &&
+          (!route || p.routeCode === route) &&
+          (!status || (status === 'OVERSPEED' ? p.overspeed : p.status === status)),
+      ),
+    [positions, operator, route, status],
+  );
+  const selected = visible.find((p) => p.id === selectedId);
+  const overspeed = visible.filter((p) => p.overspeed && p.id !== selected?.id);
   const matches = search.trim()
-    ? positions
+    ? visible
         .filter((p) => p.label.toLowerCase().includes(search.trim().toLowerCase()))
         .slice(0, 20)
     : [];
   return (
-    <section className="fleet-full-map" aria-label="Peta armada penuh">
+    <section
+      className={`fleet-full-map reference-map map-theme-${theme}`}
+      aria-label="Peta armada penuh"
+    >
       <FleetCanvas
-        positions={positions}
+        positions={visible}
         selectedId={selected?.id ?? null}
         onSelect={select}
         demo={demo}
         focusRequest={focusRequest}
+        theme={theme}
       />
       <div className="map-controls">
         <label className="field">
@@ -117,8 +146,49 @@ export function MapPage({
             aria-label="Cari bus di peta"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Nomor bus…"
+            placeholder="Cari kendaraan…"
           />
+        </label>
+        <label className="field map-filter">
+          <span className="sr-only">Operator di peta</span>
+          <select
+            aria-label="Operator di peta"
+            value={operator}
+            onChange={(event) => setOperator(event.target.value)}
+          >
+            <option value="">Semua operator</option>
+            {operators.map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+        <label className="field map-filter">
+          <span className="sr-only">Rute di peta</span>
+          <select
+            aria-label="Rute di peta"
+            value={route}
+            onChange={(event) => setRoute(event.target.value)}
+          >
+            <option value="">Semua rute{routes.length ? ` (${routes.length})` : ''}</option>
+            {routes.map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+        <label className="field map-filter">
+          <span className="sr-only">Status di peta</span>
+          <select
+            aria-label="Status di peta"
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+          >
+            <option value="">Semua status</option>
+            {['ACTIVE', 'IDLE', 'DELAY', 'OFFLINE', 'OVERSPEED'].map((value) => (
+              <option key={value} value={value}>
+                {statusText(value)}
+              </option>
+            ))}
+          </select>
         </label>
         <button className="button secondary" disabled={state.busy} onClick={state.refresh}>
           {state.busy ? 'Memuat…' : 'Perbarui'}
@@ -134,7 +204,8 @@ export function MapPage({
         ) : null}
         <small role="status">
           {demo ? 'Demo · ' : ''}
-          {state.updatedAt ? time(state.updatedAt) : 'Menghubungkan…'}
+          {state.updatedAt ? time(state.updatedAt) : 'Menghubungkan…'} · {visible.length}/
+          {positions.length} bus dengan GPS
         </small>
         {search ? (
           <div className="map-search-results">
@@ -149,6 +220,21 @@ export function MapPage({
             )}
           </div>
         ) : null}
+      </div>
+      <div className="map-theme-switch" role="group" aria-label="Tampilan peta">
+        {(['dark', 'light'] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={theme === value}
+            onClick={() => {
+              setTheme(value);
+              writePreference('tracks-map-theme', value);
+            }}
+          >
+            {value === 'dark' ? 'Dark' : 'Light'}
+          </button>
+        ))}
       </div>
       {state.error || state.data?.truncated || state.data?.alertError ? (
         <div className="map-notice notice error" role="alert">
