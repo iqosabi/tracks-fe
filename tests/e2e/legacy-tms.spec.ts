@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { tmsFixtures } from '../fixtures/tms';
+import { tmsFixtures, tmsLoginFixture } from '../fixtures/tms';
 
 test('legacy workspace consumes captured modules and isolates CMS session', async ({
   page,
@@ -8,7 +8,8 @@ test('legacy workspace consumes captured modules and isolates CMS session', asyn
   const errors: string[] = [],
     calls: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  let forbidden = false;
+  let forbidden = false,
+    loginAttempts = 0;
   let releaseLive: () => void = () => {};
   const liveGate = new Promise<void>((resolve) => {
     releaseLive = resolve;
@@ -27,6 +28,20 @@ test('legacy workspace consumes captured modules and isolates CMS session', asyn
     const url = new URL(route.request().url()),
       path = url.pathname.replace(/^\/api/, '');
     calls.push(route.request().method() + ' ' + path);
+    if (path === '/auth/login') {
+      loginAttempts++;
+      expect(route.request().method()).toBe('POST');
+      expect(route.request().postDataJSON()).toEqual({
+        email: 'operator@example.test',
+        password: 'synthetic-password!',
+      });
+      expect(route.request().headers().authorization).toBeUndefined();
+      return route.fulfill(
+        loginAttempts === 1
+          ? { status: 401, json: { success: false } }
+          : { json: { success: true, metadata: {}, data: tmsLoginFixture } },
+      );
+    }
     expect(route.request().headers().authorization).toBe('Bearer local-test');
     expect(route.request().headers().cookie).toBeUndefined();
     if (forbidden && path === '/menus') return route.fulfill({ status: 403, json: {} });
@@ -41,13 +56,24 @@ test('legacy workspace consumes captured modules and isolates CMS session', asyn
   expect(old.headers()['content-security-policy']).toContain('https://api-tms.aestaworks.com');
   expect((await request.get('/old/')).status()).toBe(200);
   await page.goto('/old');
-  await expect(page.getByRole('heading', { name: 'Hubungkan sesi TMS' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Masuk ke TMS' })).toBeVisible();
   expect(calls).toEqual([]);
-  await page.locator('[name=accessToken]').fill('local-test');
-  await page.getByRole('button', { name: 'Hubungkan TMS', exact: true }).click();
+  await expect(page.locator('[name=accessToken]')).toHaveCount(0);
+  await expect(page.locator('[name=email]')).toHaveValue('');
+  await page.locator('[name=email]').fill('operator@example.test');
+  await page.locator('[name=password]').fill('synthetic-password!');
+  await page.getByRole('button', { name: 'Tampilkan password' }).click();
+  await expect(page.locator('[name=password]')).toHaveAttribute('type', 'text');
+  await page.getByRole('button', { name: 'Sembunyikan password' }).click();
+  await page.getByRole('button', { name: 'Masuk ke TMS', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Email atau password tidak valid');
+  await expect(page.locator('.legacy-workspace')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Masuk ke TMS', exact: true }).click();
   await expect(page.getByTestId('loading-popup')).toBeVisible();
   releaseLive();
   await expect(page.getByRole('heading', { name: 'Data bus', exact: true })).toBeVisible();
+  await expect(page.locator('.legacy-header')).toContainText('Pengguna contoh');
+  await expect(page.locator('[name=password]')).toHaveCount(0);
   await expect(page.getByTestId('loading-popup')).toHaveCount(0);
   const buses = page.locator('.legacy-table').last();
   await expect(buses.locator('tbody tr')).toHaveCount(10);
@@ -83,7 +109,7 @@ test('legacy workspace consumes captured modules and isolates CMS session', asyn
   await page.getByRole('searchbox', { name: 'Cari bus TMS' }).fill('BUS-024');
   await page.locator('.map-search-results').getByRole('button', { name: 'BUS-024' }).click();
   await expect(page.locator('.floating-bus-card')).toContainText('BUS-024');
-  await expect(page.locator('.floating-bus-card')).toContainText('00:00:01.333');
+  await expect(page.locator('.floating-bus-card')).toContainText('1 Detik');
   await expect(page.locator('.floating-bus-card')).toContainText('24 km/j');
   const marker = page.locator('.fleet-map-marker[title=BUS-024] .bus-marker-symbol');
   const before = await marker.evaluate((el) => el.getBoundingClientRect().width);
@@ -112,8 +138,8 @@ test('legacy workspace consumes captured modules and isolates CMS session', asyn
     expect.arrayContaining(Object.keys(tmsFixtures)),
   );
   await page.getByRole('button', { name: 'Buka sidebar TMS' }).click();
-  await page.getByRole('button', { name: 'Putuskan sesi TMS' }).click();
-  await expect(page.getByRole('heading', { name: 'Hubungkan sesi TMS' })).toBeVisible();
+  await page.getByRole('button', { name: 'Keluar dari TMS' }).click();
+  await expect(page.getByRole('heading', { name: 'Masuk ke TMS' })).toBeVisible();
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Masuk ke workspace' })).toBeVisible();
   expect(errors).toEqual([]);

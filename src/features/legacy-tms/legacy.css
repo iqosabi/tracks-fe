@@ -86,6 +86,17 @@
   display: grid;
   gap: 18px;
 }
+.legacy-password {
+  display: flex;
+  gap: 8px;
+}
+.legacy-password input {
+  min-width: 0;
+  flex: 1;
+}
+.legacy-password .button {
+  flex-shrink: 0;
+}
 .legacy-connect details {
   font-size: 13px;
 }

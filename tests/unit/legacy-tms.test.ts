@@ -2,12 +2,71 @@ import { describe, expect, it, vi } from 'vitest';
 import { TmsClient } from '../../src/features/legacy-tms/client';
 import { liveSchema } from '../../src/features/legacy-tms/contract';
 import { liveRows, mapPositions, menuRows } from '../../src/features/legacy-tms/data';
-import { tmsFixtures } from '../fixtures/tms';
+import { tmsFixtures, tmsLoginFixture } from '../fixtures/tms';
 import { activityStore } from '../../src/core/activity/store';
 
 const response = (data: unknown, status = 200) =>
   Response.json({ success: true, metadata: {}, data }, { status });
 describe('isolated legacy TMS transport', () => {
+  it('logs in with email/password JSON and uses returned access/refresh tokens in memory', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(response(tmsLoginFixture))
+      .mockResolvedValueOnce(response([]));
+    const { client, user } = await TmsClient.login(
+      { email: ' operator@example.test ', password: 'synthetic-password!' },
+      new AbortController().signal,
+      fetcher,
+    );
+    expect(user).toMatchObject({ fullName: 'Pengguna contoh', role: 'GOD_MODE', operatorId: null });
+    expect(fetcher.mock.calls[0]).toEqual([
+      'https://api-tms.aestaworks.com/api/auth/login',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'operator@example.test', password: 'synthetic-password!' }),
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        credentials: 'omit',
+        cache: 'no-store',
+      }),
+    ]);
+    await client.read('fleets');
+    expect(fetcher.mock.calls[1][1]?.headers).toMatchObject({ Authorization: 'Bearer local-test' });
+    client.dispose();
+    expect(activityStore.snapshot()).toBe(0);
+  });
+  it('rejects wrong credentials, failed envelopes and malformed login data without returning a session', async () => {
+    for (const result of [
+      new Response('', { status: 401 }),
+      Response.json({ success: false, data: null }),
+      response({ accessToken: 'invalid-test' }),
+    ]) {
+      const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(result);
+      await expect(
+        TmsClient.login(
+          { email: 'operator@example.test', password: 'synthetic' },
+          new AbortController().signal,
+          fetcher,
+        ),
+      ).rejects.toThrow();
+      expect(fetcher).toHaveBeenCalledTimes(1);
+      expect(activityStore.snapshot()).toBe(0);
+    }
+  });
+  it('does not create a session if login finishes after navigation aborts it', async () => {
+    const abort = new AbortController();
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => {
+      abort.abort();
+      return response(tmsLoginFixture);
+    });
+    await expect(
+      TmsClient.login(
+        { email: 'operator@example.test', password: 'synthetic' },
+        abort.signal,
+        fetcher,
+      ),
+    ).rejects.toThrow();
+    expect(activityStore.snapshot()).toBe(0);
+  });
   it('consumes data envelope with bearer auth, no cache/cookies, no CMS URL', async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(response([]));
     const client = new TmsClient('Bearer local-test', '', fetcher);

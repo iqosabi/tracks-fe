@@ -1,4 +1,16 @@
 /** Synthetic values with the shape captured in the supplied HAR. No recorded credentials/data. */
+export const tmsLoginFixture = {
+  user: {
+    id: 'user-test',
+    fullName: 'Pengguna contoh',
+    phoneNumber: null,
+    email: 'operator@example.test',
+    role: 'GOD_MODE',
+    operatorId: null,
+  },
+  accessToken: 'local-test',
+  refreshToken: 'refresh-test',
+};
 const bus = (index: number) => ({
   operatorCode: 'TEST',
   busId: `BUS-${String(index).padStart(3, '0')}`,

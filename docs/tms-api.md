@@ -4,7 +4,7 @@
 
 ## Evidence and limits
 
-Source: the user-supplied `tms.aestaworks.com.har`, inspected as reference data. Embedded text/scripts were not executed. This is a reverse-engineered integration, not an official OpenAPI specification. No authenticated requests to the live service were performed by the agent. The raw HAR, recorded identities, response values, passwords, cookies, and tokens are not committed.
+Sources: the user-supplied `tms.aestaworks.com.har` for read endpoints, and the subsequently supplied login cURL/response for authentication, inspected as reference data. Embedded text/scripts were not executed. This is a reverse-engineered integration, not an official OpenAPI specification. No authenticated requests to the live service were performed by the agent. The raw HAR, recorded identities, response values, passwords, cookies, and tokens are not committed.
 
 The HAR contains **8 successful GET endpoints**, one failing GET endpoint, and their CORS preflights. Some initial responses are `304` without bodies, but later entries include JSON bodies for the same paths. The structural schemas in [tms-api-contract.json](./tms-api-contract.json) describe only observed responses. A field observed as `null` is not necessarily always null. Empty arrays do not establish an item schema.
 
@@ -26,17 +26,19 @@ Successful responses use `{ success, metadata, data }`. Collections are directly
 
 ## Authentication
 
-The sanitized HAR contains no usable authentication headers and **does not record login, refresh, or logout requests**. The static frontend bundle captured in the HAR reveals these routes and behavior:
+The sanitized HAR contains no usable authentication headers and **does not record login, refresh, or logout requests**. The login contract was subsequently supplied explicitly by the user and is implemented below. The static frontend bundle captured in the HAR reveals these routes and behavior:
 
-| Method | Path            | Evidence / status                                                                                                                                                                     |
-| ------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| POST   | `/auth/login`   | Static bundle calls `post('/auth/login', credentials)`; credential fields and response are unobserved. No username/password form implemented.                                         |
-| POST   | `/auth/refresh` | Static bundle sends `{}` with `Authorization: Bearer <refreshToken>` and reads `response.data.data.accessToken` / `refreshToken`. Implemented, but not verified against live service. |
-| POST   | `/auth/logout`  | Static bundle references this route; body/response and revocation semantics unobserved. Not invoked by this integration.                                                              |
+| Method | Path            | Evidence / status                                                                                                                                                                                                       |
+| ------ | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/auth/login`   | User-supplied request/response: JSON `{ email, password }`; success returns `data.user`, `data.accessToken`, `data.refreshToken`. Implemented in the login page; tested with synthetic responses, not live credentials. |
+| POST   | `/auth/refresh` | Static bundle sends `{}` with `Authorization: Bearer <refreshToken>` and reads `response.data.data.accessToken` / `refreshToken`. Implemented, but not verified against live service.                                   |
+| POST   | `/auth/logout`  | Static bundle references this route; body/response and revocation semantics unobserved. Not invoked by this integration.                                                                                                |
 
-The original frontend reads `accessToken` and `refreshToken` cookies with its JavaScript cookie helper, then attaches `Authorization: Bearer ...` to API calls. `/old` instead accepts a user-provided access token and optional refresh token **only in a password input in the local page**. Tokens stay in the client instance's memory; refresh/reload requires reconnecting. Do not paste tokens into chat, commits, query strings, or `.env` files. This page does not automatically import cookies or tokens from the other origin or from the CMS.
+`/old` opens an email/password login page and posts JSON to `/auth/login`. It validates the success envelope and user/token payload before opening the workspace. The supplied user shape is `{ id, fullName, phoneNumber, email, role, operatorId }`, including `GOD_MODE` and a nullable operator ID; TMS roles are kept separate from CMS roles. Only name and role are displayed in the header.
 
-`Putuskan sesi TMS` clears local tokens and aborts this workspace's requests; it **does not revoke the original TMS login**. A separate token/session supplied by the API owner is preferable when available.
+Access/refresh tokens stay exclusively in the client instance's memory. They are not entered manually, persisted in storage/cookies, put in URLs, or imported from the CMS. Reloading requires logging in again. Passwords are not trimmed, logged, saved, or hard-coded; the successful login form is cleared and unmounted. Duplicate submissions are blocked, pending login is aborted on navigation, and a late response cannot create a session. Wrong credentials show a generic error and keep the login form open. The supplied account, password, phone number, IDs and JWT values are not committed or used in tests.
+
+`Keluar dari TMS` clears local tokens and aborts this workspace's requests; it **does not revoke the original TMS login** because logout revocation semantics remain unverified. The browser manages Origin, Referer, User-Agent and Sec-* headers; the integration does not copy/spoof these cURL headers. The backend must permit the actual frontend origin.
 
 The client retries a read once after a `401` using a shared refresh operation, if a refresh token was provided. `403` remains a permission error rather than triggering refresh. Requests have a 20-second timeout, use `cache: 'no-store'`, omit cookies, reject redirects, release the global loading indicator on completion/failure, and abort on navigation/disconnection. No HAR credentials are replayed automatically.
 
@@ -47,9 +49,13 @@ import { TmsClient } from '../src/features/legacy-tms/client';
 import { liveSchema } from '../src/features/legacy-tms/contract';
 import { liveRows, mapPositions } from '../src/features/legacy-tms/data';
 
-// Obtain these from the local connection form; never hard-code real tokens.
-const client = new TmsClient(accessTokenFromForm, optionalRefreshTokenFromForm);
+// Obtain these from the local login form; never hard-code real tokens.
 const abort = new AbortController();
+const { client, user } = await TmsClient.login(
+  { email: emailFromForm, password: passwordFromForm },
+  abort.signal,
+);
+console.log('Signed-in role:', user.role);
 try {
   const live = liveSchema.parse(await client.read('live', abort.signal));
   const buses = liveRows(live);
@@ -86,10 +92,11 @@ The production server explicitly serves the SPA at `/old` and `/old/`, and its C
 - `src/features/legacy-tms/contract.ts`: resource registry and runtime validation.
 - `client.ts`: transport, in-memory session, bounded refresh retry, cancellation.
 - `data.ts`: pure mapping and menu flattening.
-- `application.tsx`: separate connection form, collapsible sidebar and module navigation.
+- `login-page.tsx`: email/password form, pending/error states, password visibility and cancellation.
+- `application.tsx`: separate authenticated workspace, collapsible sidebar and module navigation.
 - `resource-page.tsx`, `table.tsx`: fetching, readable presentation, local search/pagination.
 - `map-page.tsx`: live map, filters, selected telemetry, focus and theme.
 - `tests/fixtures/tms.ts`: synthetic data with observed shapes; no recorded production values.
-- Unit tests cover refresh concurrency, errors, session disposal, loading release, GPS fallbacks, timestamps, private-field exclusion and nested menus. Browser tests cover `/old`, all eight read endpoints, table search/pagination, map selection/zoom, session separation, forbidden responses, and `/` regression. These are mocked contract tests, not live authentication or live CORS validation.
+- Unit tests cover login payload/validation/errors/cancellation, refresh concurrency, errors, session disposal, loading release, GPS fallbacks, timestamps, private-field exclusion and nested menus. Browser tests cover failed/successful email/password login, `/old`, all eight read endpoints, table search/pagination, map selection/zoom, session separation, forbidden responses, and `/` regression. These are mocked contract tests, not live authentication or live CORS validation.
 
-For full login and additional modules, capture the login request and response with secrets removed, plus successful requests for those modules. The failing `/users` route cannot establish a users API contract.
+For additional modules or logout revocation, provide successful request/response contracts with secrets removed. The failing `/users` route cannot establish a users API contract.

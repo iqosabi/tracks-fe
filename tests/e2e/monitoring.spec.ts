@@ -85,7 +85,7 @@ test('role-scoped card overview and conditional bus overlays on the full map', a
   for (const label of ['Bus', 'Lat', 'Lon', 'Time bus', 'Delay', 'Speed'])
     await expect(selected.locator('dt', { hasText: new RegExp(`^${label}$`) })).toBeVisible();
   await expect(selected).toContainText('13:01:12.345 WIB');
-  await expect(selected).toContainText('2,33 Detik');
+  await expect(selected).toContainText('2 Detik');
   await expect(selected).toContainText('42 KM/J');
   overspeed = true;
   await page.locator('.map-controls button', { hasText: 'Perbarui' }).click();
@@ -103,7 +103,7 @@ test('role-scoped card overview and conditional bus overlays on the full map', a
   await expect(page.locator('.floating-bus-card.overspeed')).toHaveCount(0);
   await page.locator('.fleet-map-marker[title=BUS-001]').click();
   await expect(selected).toContainText('Nonaktif');
-  await expect(selected).toContainText('1 Menit 33,33 Detik');
+  await expect(selected).toContainText('1 Menit 33 Detik');
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

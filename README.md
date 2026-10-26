@@ -14,7 +14,7 @@ npm run dev
 
 Buka `http://localhost:5173`. Login memakai akun CMS atau pilih workspace demo. Demo tidak mengirim request perubahan data ke backend.
 
-Integrasi TMS lama tersedia terpisah di `http://localhost:5173/old`. Halaman ini memakai API `https://api-tms.aestaworks.com/api` dengan access token TMS yang dimasukkan langsung ke form lokal dan disimpan hanya di memori tab. Login username/password TMS belum tercakup dalam rekaman. Pemetaan delapan endpoint baca, kontrak respons, cara konsumsi TypeScript, batas verifikasi dan konfigurasi CORS ada di [docs/tms-api.md](docs/tms-api.md). Aplikasi CMS di `/` tetap memakai sesi dan API sebelumnya.
+Integrasi TMS lama tersedia terpisah di `http://localhost:5173/old`. Halaman ini memiliki login email/password ke API `https://api-tms.aestaworks.com/api/auth/login`. Access/refresh token hasil login hanya disimpan di memori tab; sesi CMS tetap terpisah. Pemetaan delapan endpoint baca, kontrak respons, cara konsumsi TypeScript, batas verifikasi dan konfigurasi CORS ada di [docs/tms-api.md](docs/tms-api.md). Aplikasi CMS di `/` tetap memakai sesi dan API sebelumnya.
 
 | Variabel        | Fungsi                                                              |
 | --------------- | ------------------------------------------------------------------- |

@@ -28,7 +28,7 @@ const lists: [string, string, string][] = [
   ['/cms/operators/{operatorId}/buses', 'buses', 'BUS-001'],
   ['/cms/operators/{operatorId}/routes', 'routes', 'Terminal A - Terminal B'],
   ['/cms/help-reports', 'tickets', 'Bus membutuhkan bantuan teknis'],
-  ['/monitoring/vehicles', 'vehicles', '36 km/j'],
+  ['/monitoring/vehicles', 'vehicles', '36 KM/J'],
   ['/monitoring/alerts', 'alerts', 'Terlambat'],
   ['/monitoring/vehicles/{deviceId}/history', 'history', '09:59:58.000 WIB'],
   ['/monitoring/usage', 'usage', '100 MB'],
@@ -63,7 +63,7 @@ test('CMS hasMore overrides inferred totals for both short and full pages', () =
 });
 test('summary and position use actual v1.1 names without assuming counts from page lengths', () => {
   const metrics = fleetMetrics(payload('/monitoring/summary'));
-  for (const label of ['Total armada', 'Total perangkat', 'Laporan bantuan terbuka', 'Beroperasi'])
+  for (const label of ['Total armada', 'Total perangkat', 'Laporan terbuka', 'Beroperasi'])
     expect(metrics.find((m) => m.label === label)?.value).toBe('1');
   expect(metrics.find((m) => m.label === 'Terlambat')?.value).toBe('0');
   const [position] = busPositions(

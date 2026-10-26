@@ -6,6 +6,7 @@ import { items } from '../../src/shared/data/records';
 test('uploaded response examples render every read module; loading, bus markers, zoom and focus work', async ({
   page,
 }, testInfo) => {
+  await page.clock.setFixedTime(new Date('2026-10-25T02:59:59.000Z'));
   const errors: string[] = [],
     calls: string[] = [],
     tileZooms: number[] = [];
@@ -35,7 +36,7 @@ test('uploaded response examples render every read module; loading, bus markers,
     );
     if (!entry) throw Error('Unhandled example ' + method + ' ' + path);
     let body: unknown = structuredClone(entry.response.body);
-    if (path.endsWith('/auth/login')) {
+    if (path.endsWith('/auth/login') || path.endsWith('/auth/me')) {
       const session = record(body);
       body = {
         ...session,
@@ -75,7 +76,7 @@ test('uploaded response examples render every read module; loading, bus markers,
   await expect(page.getByTestId('loading-popup')).toBeVisible();
   releaseSummary();
   await expect(page.locator('.live-stats')).toContainText('Total perangkat');
-  await expect(page.locator('.live-stats')).toContainText('09:59:59.000 WIB');
+  await expect(page.locator('.live-stats')).toContainText('Batas offline1 Menit 30 Detik');
   await expect(page.getByTestId('loading-popup')).toHaveCount(0);
   const nav = async (id: string) => {
     const button = page.locator('.sidebar [data-page=' + id + ']');
@@ -85,7 +86,7 @@ test('uploaded response examples render every read module; loading, bus markers,
     await button.click();
   };
   const checks: [string, string][] = [
-    ['fleet', '36 km/j'],
+    ['fleet', '36 KM/J'],
     ['alerts', 'Terlambat'],
     ['operatorSummary', 'AMJ'],
     ['buses', 'BUS-001'],
@@ -117,7 +118,7 @@ test('uploaded response examples render every read module; loading, bus markers,
   await nav('health');
   await expect(page.locator('.health-grid')).toContainText('Terhubung');
   await nav('account');
-  await expect(page.locator('.profile-summary')).toContainText('operator1');
+  await expect(page.locator('.account-profile')).toContainText('operator1');
   await nav('map');
   await expect(page.locator('.fleet-map-marker')).toHaveCount(2);
   await expect(page.locator('.bus-marker-icon')).toHaveCount(2);
@@ -132,8 +133,8 @@ test('uploaded response examples render every read module; loading, bus markers,
   const card = page.locator('.floating-bus-card[data-selected=true]');
   await expect(card).toContainText('BUS-002');
   await expect(card).toContainText('09:59:58.000 WIB');
-  await expect(card).toContainText('00:00:01.000');
-  await expect(card).toContainText('36 km/j');
+  await expect(card).toContainText('1 Detik');
+  await expect(card).toContainText('36 KM/J');
   await expect.poll(() => Math.max(...tileZooms)).toBeGreaterThanOrEqual(16);
   const marker = page.locator('.fleet-map-marker[title=BUS-002]'),
     canvas = page.locator('.carto-canvas');

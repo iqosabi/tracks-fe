@@ -40,8 +40,8 @@ test('overspeed requires explicit API evidence; speed alone does not create an a
   expect(result[0]?.delayMs).toBe(2333);
   expect(result[0]?.speed).toBe(0);
   expect(busPositions([{ latitude: 91, longitude: 1 }], [])).toHaveLength(0);
-  expect(delayText(2333)).toBe('2,33 Detik');
-  expect(delayText(2717)).toBe('2,72 Detik');
+  expect(delayText(2333)).toBe('2 Detik');
+  expect(delayText(2717)).toBe('3 Detik');
   expect(delayText(120000)).toBe('2 Menit');
   expect(delayText(3600000)).toBe('1 Jam');
   expect(delayText(0)).toBe('0 Detik');

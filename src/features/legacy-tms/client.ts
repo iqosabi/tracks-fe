@@ -1,11 +1,54 @@
 import { withActivity } from '../../core/activity/store';
 import { ApiError } from '../../core/api/errors';
-import { envelopeSchema, TMS_API_BASE, resources, type ResourceId } from './contract';
+import {
+  envelopeSchema,
+  loginCredentialsSchema,
+  loginDataSchema,
+  TMS_API_BASE,
+  resources,
+  type ResourceId,
+} from './contract';
 import { z } from 'zod';
 
 const tokensSchema = z.object({ accessToken: z.string().min(1), refreshToken: z.string().min(1) });
 /** TMS credentials never enter CMS auth, cookies, URLs, or persistent browser storage. */
 export class TmsClient {
+  static login(
+    credentials: { email: string; password: string },
+    signal: AbortSignal,
+    transport: typeof fetch = (input, init) => fetch(input, init),
+  ) {
+    return withActivity(async () => {
+      const input = loginCredentialsSchema.safeParse(credentials);
+      if (!input.success) throw Error('Isi email dan password yang valid.');
+      const response = await transport(TMS_API_BASE + '/auth/login', {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(input.data),
+        signal: AbortSignal.any([signal, AbortSignal.timeout(20000)]),
+        cache: 'no-store',
+        credentials: 'omit',
+        redirect: 'error',
+      });
+      if (!response.ok)
+        throw new ApiError(
+          [400, 401, 403].includes(response.status)
+            ? 'Email atau password tidak valid, atau akun tidak diizinkan masuk.'
+            : response.status === 429
+              ? 'Terlalu banyak percobaan login. Coba lagi nanti.'
+              : 'Login TMS gagal. Coba lagi nanti.',
+          response.status,
+        );
+      const envelope = envelopeSchema.safeParse(await response.json());
+      if (!envelope.success || !envelope.data.success)
+        throw Error('Login TMS ditolak. Periksa email dan password.');
+      const result = loginDataSchema.safeParse(envelope.data.data);
+      if (!result.success) throw Error('Respons login TMS tidak sesuai kontrak.');
+      signal.throwIfAborted();
+      const { user, accessToken, refreshToken } = result.data;
+      return { client: new TmsClient(accessToken, refreshToken, transport), user };
+    });
+  }
   private accessToken: string;
   private refreshToken: string;
   private refreshing?: Promise<void>;
@@ -47,10 +90,10 @@ export class TmsClient {
     return response;
   }
   private async renew() {
-    if (!this.refreshToken) throw new ApiError('Sesi TMS berakhir. Hubungkan ulang.', 401);
+    if (!this.refreshToken) throw new ApiError('Sesi TMS berakhir. Silakan masuk kembali.', 401);
     const response = await this.send('/auth/refresh', this.refreshToken, undefined, 'POST');
     if (!response.ok)
-      throw new ApiError('Refresh sesi TMS gagal. Hubungkan ulang.', response.status);
+      throw new ApiError('Refresh sesi TMS gagal. Silakan masuk kembali.', response.status);
     const body = envelopeSchema.parse(await response.json());
     if (!body.success) throw Error('Refresh sesi TMS ditolak.');
     const tokens = tokensSchema.parse(body.data);
@@ -77,7 +120,7 @@ export class TmsClient {
       if (!response.ok) {
         const message =
           response.status === 401
-            ? 'Sesi TMS berakhir. Hubungkan ulang.'
+            ? 'Sesi TMS berakhir. Silakan masuk kembali.'
             : response.status === 403
               ? 'Akun TMS tidak memiliki akses ke modul ini.'
               : `API TMS gagal (HTTP ${response.status}).`;

@@ -19,6 +19,24 @@ export const envelopeSchema = z.object({
   metadata: z.unknown().optional(),
   data: z.unknown(),
 });
+export const loginCredentialsSchema = z.object({
+  email: z.string().trim().pipe(z.email()),
+  password: z.string().min(1),
+});
+export const tmsUserSchema = z.object({
+  id: z.string(),
+  fullName: z.string(),
+  email: z.email(),
+  role: z.string(),
+  operatorId: z.string().nullable(),
+  phoneNumber: z.string().nullable().optional(),
+});
+export const loginDataSchema = z.object({
+  user: tmsUserSchema,
+  accessToken: z.string().min(1),
+  refreshToken: z.string().min(1),
+});
+export type TmsUser = z.infer<typeof tmsUserSchema>;
 export const rowSchema = z.record(z.string(), z.unknown());
 export const rowsSchema = z.array(rowSchema);
 const nullableNumber = z.number().finite().nullable();

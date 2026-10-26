@@ -300,7 +300,7 @@ test('all 43 CMS endpoints remain reachable through their UI flows', async ({ br
     await page.locator('[name=deviceId] option[value=device-1]').waitFor({ state: 'attached' });
     await page.locator('[name=deviceId]').selectOption('device-1');
     await page.getByRole('button', { name: 'Terapkan filter', exact: true }).click();
-    await page.getByRole('cell', { name: '32 km/j', exact: true }).waitFor();
+    await page.getByRole('cell', { name: '32 KM/J', exact: true }).waitFor();
     await nav('operatorSummary');
     await page.getByRole('cell', { name: '33.933', exact: true }).waitFor();
     await create('operators', { code: 'TEST', name: 'Synthetic operator' });

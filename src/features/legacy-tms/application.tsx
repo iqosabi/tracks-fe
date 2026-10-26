@@ -1,78 +1,17 @@
 import './legacy.css';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { TmsClient } from './client';
-import { resources, type LegacyPage, type ResourceId } from './contract';
+import { resources, type LegacyPage, type ResourceId, type TmsUser } from './contract';
 import { ResourcePage } from './resource-page';
-import { messageOf } from '../../shared/data/guards';
+import { TmsLoginPage } from './login-page';
 
 const LegacyMap = lazy(() =>
   import('./map-page').then((module) => ({ default: module.LegacyMapPage })),
 );
 const groups = ['Operasional', 'Administrasi'] as const;
-function ConnectForm({ onConnect }: { onConnect: (client: TmsClient) => void }) {
-  const [error, setError] = useState('');
-  return (
-    <main className="legacy-connect">
-      <img src="/assets/amj-logo.svg" alt="TK. Ananda Makmur Jaya" />
-      <span className="legacy-eyebrow">TMS · Workspace terpisah</span>
-      <h1>Hubungkan sesi TMS</h1>
-      <p>
-        Gunakan access token dari sesi TMS Anda. Token hanya disimpan di memori tab ini dan dihapus
-        saat halaman dimuat ulang.
-      </p>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          const form = event.currentTarget,
-            data = new FormData(form);
-          try {
-            const client = new TmsClient(
-              String(data.get('accessToken') ?? ''),
-              String(data.get('refreshToken') ?? ''),
-            );
-            form.reset();
-            onConnect(client);
-          } catch (reason) {
-            setError(messageOf(reason));
-          }
-        }}
-      >
-        <label>
-          Access token TMS
-          <input
-            name="accessToken"
-            type="password"
-            autoComplete="off"
-            spellCheck={false}
-            required
-          />
-        </label>
-        <label>
-          Refresh token TMS (opsional)
-          <input name="refreshToken" type="password" autoComplete="off" spellCheck={false} />
-        </label>
-        {error ? <p role="alert">{error}</p> : null}
-        <button className="button primary" type="submit">
-          Hubungkan TMS
-        </button>
-      </form>
-      <details>
-        <summary>Cara mengambil token</summary>
-        <p>
-          Di browser Anda yang sudah login TMS: DevTools → Application/Storage → Cookies → domain
-          TMS. Salin nilai <code>accessToken</code> ke form ini. Jangan kirim token lewat chat. Jika
-          cookie tidak bisa diakses, minta access token melalui pengelola API TMS.
-        </p>
-      </details>
-      <p className="legacy-caption">
-        Login username/password belum tersedia karena proses login tidak tercakup dalam HAR.
-      </p>
-      <a href="/">Kembali ke Tracks Monitor</a>
-    </main>
-  );
-}
 export function LegacyApplication() {
-  const [client, setClient] = useState<TmsClient | null>(null);
+  const [session, setSession] = useState<{ client: TmsClient; user: TmsUser } | null>(null);
+  const client = session?.client;
   const [page, setPage] = useState<LegacyPage>('live');
   const [sidebar, setSidebar] = useState(true),
     [revision, setRevision] = useState(0);
@@ -80,9 +19,9 @@ export function LegacyApplication() {
   if (!client)
     return (
       <div className="legacy-app">
-        <ConnectForm
-          onConnect={(next) => {
-            setClient(next);
+        <TmsLoginPage
+          onLogin={(next) => {
+            setSession(next);
             setPage('live');
           }}
         />
@@ -101,7 +40,10 @@ export function LegacyApplication() {
         </button>
         <img src="/assets/amj-logo.svg" alt="AMJ" />
         <strong>
-          TMS <span>Legacy workspace</span>
+          TMS{' '}
+          <span>
+            {session?.user.fullName} · {session?.user.role}
+          </span>
         </strong>
         <a className="button" href="/">
           Tracks Monitor ↗
@@ -137,10 +79,10 @@ export function LegacyApplication() {
             className="button"
             onClick={() => {
               client.dispose();
-              setClient(null);
+              setSession(null);
             }}
           >
-            Putuskan sesi TMS
+            Keluar dari TMS
           </button>
         </nav>
       ) : null}
