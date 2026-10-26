@@ -28,7 +28,7 @@ const policy = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: https://*.basemaps.cartocdn.com",
-  `connect-src 'self' ${api.origin}`,
+  `connect-src 'self' ${api.origin} https://api-tms.aestaworks.com`,
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
@@ -47,7 +47,10 @@ const server = createServer(async (request, response) => {
   }
   try {
     const pathname = decodeURIComponent(new URL(request.url ?? '/', 'http://localhost').pathname);
-    const file = resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
+    const file = resolve(
+      root,
+      '.' + (['/', '/old', '/old/'].includes(pathname) ? '/index.html' : pathname),
+    );
     const resolved = await realpath(file);
     if (!resolved.startsWith(root + sep) || !contentTypes[extname(resolved)]) {
       response.writeHead(404).end('Not found');

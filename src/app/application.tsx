@@ -17,6 +17,11 @@ import { OverviewPage } from '../features/overview/overview-page';
 const MapPage = lazy(() =>
   import('../features/maps/map-page').then((module) => ({ default: module.MapPage })),
 );
+const LegacyApplication = lazy(() =>
+  import('../features/legacy-tms/application').then((module) => ({
+    default: module.LegacyApplication,
+  })),
+);
 import { showConnectionDialog } from '../features/settings/connection-dialog';
 import { closeDialog, openDialog } from '../shared/ui/dialog';
 import { createToast } from '../shared/ui/toast';
@@ -130,7 +135,13 @@ export function startApplication(element: HTMLElement, toastElement: HTMLElement
     toast = createToast(toastElement);
   root.render(
     <ErrorBoundary>
-      <Application notify={toast.notify} />
+      {/^\/old\/?$/.test(location.pathname) ? (
+        <Suspense fallback={<p role="status">Memuat workspace TMS…</p>}>
+          <LegacyApplication />
+        </Suspense>
+      ) : (
+        <Application notify={toast.notify} />
+      )}
       <LoadingPopup />
     </ErrorBoundary>,
   );

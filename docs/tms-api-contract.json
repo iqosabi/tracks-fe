@@ -1,0 +1,1256 @@
+{
+  "baseUrl": "https://api-tms.aestaworks.com/api",
+  "provenance": "Structural observations from user-provided HAR; values, headers, cookies, tokens and raw HAR excluded. Observed null is not proof a field must always be null. Not an official OpenAPI contract.",
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/menus/me",
+      "observedStatuses": [304],
+      "responseSchemas": [
+        {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["message"]
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "icon": {
+                        "type": "string"
+                      },
+                      "sequence": {
+                        "type": "number"
+                      },
+                      "roles": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "parentId": {
+                        "type": "null"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      },
+                      "children": {
+                        "type": "array",
+                        "items": {}
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "path",
+                      "icon",
+                      "sequence",
+                      "roles",
+                      "parentId",
+                      "createdAt",
+                      "updatedAt",
+                      "children"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "icon": {
+                        "type": "string"
+                      },
+                      "sequence": {
+                        "type": "number"
+                      },
+                      "roles": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "parentId": {
+                        "type": "null"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      },
+                      "children": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "title": {
+                              "type": "string"
+                            },
+                            "path": {
+                              "type": "string"
+                            },
+                            "icon": {
+                              "type": "string"
+                            },
+                            "sequence": {
+                              "type": "number"
+                            },
+                            "roles": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "parentId": {
+                              "type": "string"
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            },
+                            "updatedAt": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "title",
+                            "path",
+                            "icon",
+                            "sequence",
+                            "roles",
+                            "parentId",
+                            "createdAt",
+                            "updatedAt"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "path",
+                      "icon",
+                      "sequence",
+                      "roles",
+                      "parentId",
+                      "createdAt",
+                      "updatedAt",
+                      "children"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "null"
+                      },
+                      "icon": {
+                        "type": "string"
+                      },
+                      "sequence": {
+                        "type": "number"
+                      },
+                      "roles": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "parentId": {
+                        "type": "null"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      },
+                      "children": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "title": {
+                              "type": "string"
+                            },
+                            "path": {
+                              "type": "string"
+                            },
+                            "icon": {
+                              "type": "string"
+                            },
+                            "sequence": {
+                              "type": "number"
+                            },
+                            "roles": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "parentId": {
+                              "type": "string"
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            },
+                            "updatedAt": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "title",
+                            "path",
+                            "icon",
+                            "sequence",
+                            "roles",
+                            "parentId",
+                            "createdAt",
+                            "updatedAt"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "path",
+                      "icon",
+                      "sequence",
+                      "roles",
+                      "parentId",
+                      "createdAt",
+                      "updatedAt",
+                      "children"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "required": ["success", "metadata", "data"]
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/operationals/stations",
+      "observedStatuses": [304],
+      "responseSchemas": [
+        {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["message"]
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "lat": {
+                    "type": "number"
+                  },
+                  "lng": {
+                    "type": "number"
+                  },
+                  "radius": {
+                    "type": "number"
+                  },
+                  "audioFile": {
+                    "type": "string"
+                  },
+                  "stationText": {
+                    "type": "string"
+                  },
+                  "downloadUrl": {
+                    "type": "string"
+                  },
+                  "usedIn": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["id", "name", "code"]
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "lat",
+                  "lng",
+                  "radius",
+                  "audioFile",
+                  "stationText",
+                  "downloadUrl",
+                  "usedIn"
+                ]
+              }
+            }
+          },
+          "required": ["success", "metadata", "data"]
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/operationals/corridors",
+      "observedStatuses": [304],
+      "responseSchemas": [
+        {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["message"]
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "totalStations": {
+                    "type": "number"
+                  }
+                },
+                "required": ["id", "name", "code", "type", "totalStations"]
+              }
+            }
+          },
+          "required": ["success", "metadata", "data"]
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/fleets",
+      "observedStatuses": [304],
+      "responseSchemas": [
+        {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["message"]
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "plateNumber": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "fleetStatus": {
+                    "type": "string"
+                  },
+                  "deviceStatus": {
+                    "type": "string"
+                  },
+                  "lastCheckIn": {
+                    "type": "null"
+                  },
+                  "lastActive": {
+                    "type": "null"
+                  },
+                  "lastGpsLat": {
+                    "type": "null"
+                  },
+                  "lastGpsLng": {
+                    "type": "null"
+                  },
+                  "lastGpsAt": {
+                    "type": "null"
+                  },
+                  "totalDistanceKm": {
+                    "type": "number"
+                  },
+                  "operatorId": {
+                    "type": "string"
+                  },
+                  "assignedCorridorId": {
+                    "type": "null"
+                  },
+                  "createdAt": {
+                    "type": "string"
+                  },
+                  "updatedAt": {
+                    "type": "string"
+                  },
+                  "device": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "uniqueId": {
+                        "type": "string"
+                      },
+                      "imei": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "busId": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["id", "uniqueId", "imei", "description", "busId", "updatedAt"]
+                  },
+                  "operator": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "code": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["name", "code"]
+                  },
+                  "assignedCorridor": {
+                    "type": "null"
+                  }
+                },
+                "required": [
+                  "id",
+                  "code",
+                  "plateNumber",
+                  "type",
+                  "fleetStatus",
+                  "deviceStatus",
+                  "lastCheckIn",
+                  "lastActive",
+                  "lastGpsLat",
+                  "lastGpsLng",
+                  "lastGpsAt",
+                  "totalDistanceKm",
+                  "operatorId",
+                  "assignedCorridorId",
+                  "createdAt",
+                  "updatedAt",
+                  "device",
+                  "operator",
+                  "assignedCorridor"
+                ]
+              }
+            }
+          },
+          "required": ["success", "metadata", "data"]
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/fleets/live-status",
+      "observedStatuses": [200],
+      "responseSchemas": [
+        {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["message"]
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "operatorCode": {
+                  "type": "null"
+                },
+                "generatedAt": {
+                  "type": "string"
+                },
+                "summary": {
+                  "type": "object",
+                  "properties": {
+                    "totalBuses": {
+                      "type": "number"
+                    },
+                    "active": {
+                      "type": "number"
+                    },
+                    "idle": {
+                      "type": "number"
+                    },
+                    "stop": {
+                      "type": "number"
+                    },
+                    "withHistory": {
+                      "type": "number"
+                    },
+                    "withoutHistory": {
+                      "type": "number"
+                    },
+                    "lastActive": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "totalBuses",
+                    "active",
+                    "idle",
+                    "stop",
+                    "withHistory",
+                    "withoutHistory",
+                    "lastActive"
+                  ]
+                },
+                "totalOperators": {
+                  "type": "number"
+                },
+                "byOperator": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "operatorCode": {
+                        "type": "string"
+                      },
+                      "summary": {
+                        "type": "object",
+                        "properties": {
+                          "totalBuses": {
+                            "type": "number"
+                          },
+                          "active": {
+                            "type": "number"
+                          },
+                          "idle": {
+                            "type": "number"
+                          },
+                          "stop": {
+                            "type": "number"
+                          },
+                          "withHistory": {
+                            "type": "number"
+                          },
+                          "withoutHistory": {
+                            "type": "number"
+                          },
+                          "lastActive": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "totalBuses",
+                          "active",
+                          "idle",
+                          "stop",
+                          "withHistory",
+                          "withoutHistory",
+                          "lastActive"
+                        ]
+                      },
+                      "buses": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "operatorCode": {
+                              "type": "string"
+                            },
+                            "busId": {
+                              "type": "string"
+                            },
+                            "busCode": {
+                              "type": "null"
+                            },
+                            "vehicleNumber": {
+                              "type": "null"
+                            },
+                            "busType": {
+                              "type": "null"
+                            },
+                            "operationalStatus": {
+                              "type": "string"
+                            },
+                            "deviceStatus": {
+                              "type": "string"
+                            },
+                            "speed": {
+                              "type": "number"
+                            },
+                            "heading": {
+                              "type": "number"
+                            },
+                            "corridorActive": {
+                              "type": "string"
+                            },
+                            "lastPosition": {
+                              "type": "object",
+                              "properties": {
+                                "lat": {
+                                  "type": "number"
+                                },
+                                "lon": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": ["lat", "lon"]
+                            },
+                            "activePosition": {
+                              "type": "object",
+                              "properties": {
+                                "lat": {
+                                  "type": "number"
+                                },
+                                "lon": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": ["lat", "lon"]
+                            },
+                            "deviceTime": {
+                              "type": "string"
+                            },
+                            "serverTime": {
+                              "type": "string"
+                            },
+                            "publishedTime": {
+                              "type": "string"
+                            },
+                            "lastActive": {
+                              "type": "string"
+                            },
+                            "totalDistanceKm": {
+                              "type": "null"
+                            },
+                            "fleetStatus": {
+                              "type": "null"
+                            },
+                            "operator": {
+                              "type": "null"
+                            },
+                            "imei": {
+                              "type": "null"
+                            },
+                            "token": {
+                              "type": "null"
+                            }
+                          },
+                          "required": [
+                            "operatorCode",
+                            "busId",
+                            "busCode",
+                            "vehicleNumber",
+                            "busType",
+                            "operationalStatus",
+                            "deviceStatus",
+                            "speed",
+                            "heading",
+                            "corridorActive",
+                            "lastPosition",
+                            "activePosition",
+                            "deviceTime",
+                            "serverTime",
+                            "publishedTime",
+                            "lastActive",
+                            "totalDistanceKm",
+                            "fleetStatus",
+                            "operator",
+                            "imei",
+                            "token"
+                          ]
+                        }
+                      }
+                    },
+                    "required": ["operatorCode", "summary", "buses"]
+                  }
+                }
+              },
+              "required": [
+                "source",
+                "scope",
+                "operatorCode",
+                "generatedAt",
+                "summary",
+                "totalOperators",
+                "byOperator"
+              ]
+            }
+          },
+          "required": ["success", "metadata", "data"]
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/menus",
+      "observedStatuses": [200],
+      "responseSchemas": [
+        {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["message"]
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "icon": {
+                        "type": "string"
+                      },
+                      "sequence": {
+                        "type": "number"
+                      },
+                      "roles": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "parentId": {
+                        "type": "null"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      },
+                      "children": {
+                        "type": "array",
+                        "items": {}
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "path",
+                      "icon",
+                      "sequence",
+                      "roles",
+                      "parentId",
+                      "createdAt",
+                      "updatedAt",
+                      "children"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "icon": {
+                        "type": "string"
+                      },
+                      "sequence": {
+                        "type": "number"
+                      },
+                      "roles": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "parentId": {
+                        "type": "null"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      },
+                      "children": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "title": {
+                              "type": "string"
+                            },
+                            "path": {
+                              "type": "string"
+                            },
+                            "icon": {
+                              "type": "string"
+                            },
+                            "sequence": {
+                              "type": "number"
+                            },
+                            "roles": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "parentId": {
+                              "type": "string"
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            },
+                            "updatedAt": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "title",
+                            "path",
+                            "icon",
+                            "sequence",
+                            "roles",
+                            "parentId",
+                            "createdAt",
+                            "updatedAt"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "path",
+                      "icon",
+                      "sequence",
+                      "roles",
+                      "parentId",
+                      "createdAt",
+                      "updatedAt",
+                      "children"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "null"
+                      },
+                      "icon": {
+                        "type": "string"
+                      },
+                      "sequence": {
+                        "type": "number"
+                      },
+                      "roles": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "parentId": {
+                        "type": "null"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      },
+                      "children": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "title": {
+                              "type": "string"
+                            },
+                            "path": {
+                              "type": "string"
+                            },
+                            "icon": {
+                              "type": "string"
+                            },
+                            "sequence": {
+                              "type": "number"
+                            },
+                            "roles": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "parentId": {
+                              "type": "string"
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            },
+                            "updatedAt": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "title",
+                            "path",
+                            "icon",
+                            "sequence",
+                            "roles",
+                            "parentId",
+                            "createdAt",
+                            "updatedAt"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "path",
+                      "icon",
+                      "sequence",
+                      "roles",
+                      "parentId",
+                      "createdAt",
+                      "updatedAt",
+                      "children"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "required": ["success", "metadata", "data"]
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/tenants/summary",
+      "observedStatuses": [200],
+      "responseSchemas": [
+        {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["message"]
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "overview": {
+                  "type": "object",
+                  "properties": {
+                    "totalTenants": {
+                      "type": "number"
+                    },
+                    "activeTenants": {
+                      "type": "number"
+                    },
+                    "inactiveTenants": {
+                      "type": "number"
+                    },
+                    "totalFleetsSystem": {
+                      "type": "number"
+                    },
+                    "totalUsersSystem": {
+                      "type": "number"
+                    },
+                    "avgUsersPerTenant": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "totalTenants",
+                    "activeTenants",
+                    "inactiveTenants",
+                    "totalFleetsSystem",
+                    "totalUsersSystem",
+                    "avgUsersPerTenant"
+                  ]
+                },
+                "breakdown": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "tenantId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "totalFleets": {
+                        "type": "number"
+                      },
+                      "totalUsers": {
+                        "type": "number"
+                      }
+                    },
+                    "required": ["tenantId", "name", "status", "totalFleets", "totalUsers"]
+                  }
+                }
+              },
+              "required": ["overview", "breakdown"]
+            }
+          },
+          "required": ["success", "metadata", "data"]
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/tenants",
+      "observedStatuses": [200],
+      "responseSchemas": [
+        {
+          "type": "object",
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": ["message"]
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "logo": {
+                    "type": "null"
+                  },
+                  "address": {
+                    "type": "string"
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  },
+                  "intervalTimeSec": {
+                    "type": "number"
+                  },
+                  "createdAt": {
+                    "type": "string"
+                  },
+                  "updatedAt": {
+                    "type": "string"
+                  },
+                  "_count": {
+                    "type": "object",
+                    "properties": {
+                      "buses": {
+                        "type": "number"
+                      },
+                      "users": {
+                        "type": "number"
+                      }
+                    },
+                    "required": ["buses", "users"]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "code",
+                  "logo",
+                  "address",
+                  "isActive",
+                  "intervalTimeSec",
+                  "createdAt",
+                  "updatedAt",
+                  "_count"
+                ]
+              }
+            }
+          },
+          "required": ["success", "metadata", "data"]
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "observedStatuses": [404],
+      "responseSchemas": []
+    }
+  ]
+}

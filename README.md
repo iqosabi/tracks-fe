@@ -14,6 +14,8 @@ npm run dev
 
 Buka `http://localhost:5173`. Login memakai akun CMS atau pilih workspace demo. Demo tidak mengirim request perubahan data ke backend.
 
+Integrasi TMS lama tersedia terpisah di `http://localhost:5173/old`. Halaman ini memakai API `https://api-tms.aestaworks.com/api` dengan access token TMS yang dimasukkan langsung ke form lokal dan disimpan hanya di memori tab. Login username/password TMS belum tercakup dalam rekaman. Pemetaan delapan endpoint baca, kontrak respons, cara konsumsi TypeScript, batas verifikasi dan konfigurasi CORS ada di [docs/tms-api.md](docs/tms-api.md). Aplikasi CMS di `/` tetap memakai sesi dan API sebelumnya.
+
 | Variabel        | Fungsi                                                              |
 | --------------- | ------------------------------------------------------------------- |
 | `API_BASE_URL`  | Base CMS, default `https://tracksmon-dev-api.aestaworks.com/api/v1` |
@@ -36,6 +38,7 @@ src/
     auth/               # React login page
     demo/               # Data/aksi demo terisolasi dari API
     management/         # React page/modal/fields; API, payload data, kontrak modul
+    legacy-tms/         # Workspace /old: API TMS, token terpisah, adapters, tabel dan peta
     maps/               # React map/canvas; API, adapters, lifecycle Leaflet
     monitoring/         # React live/alerts, service API
     overview/           # Kartu ringkasan, API, proyeksi metrik sesuai role
