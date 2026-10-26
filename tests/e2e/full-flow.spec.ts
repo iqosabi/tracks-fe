@@ -104,7 +104,17 @@ test('all 43 CMS endpoints remain reachable through their UI flows', async ({ br
             },
           },
         });
-      if (path === '/auth/me') return r.fulfill({ json: { user: { username: 'admin', role } } });
+      if (path === '/auth/me')
+        return r.fulfill({
+          json: {
+            user: {
+              id: 'signed-in',
+              username: role === 'SUPER_ADMIN' ? 'admin' : 'viewer',
+              role,
+              operatorId: role === 'SUPER_ADMIN' ? null : 'operator-1',
+            },
+          },
+        });
       if (path === '/auth/logout' || path === '/auth/logout-all')
         return r.fulfill({ status: 204, body: '' });
       if (path.startsWith('/health/')) return r.fulfill({ json: { status: 'ok' } });
@@ -381,7 +391,7 @@ test('all 43 CMS endpoints remain reachable through their UI flows', async ({ br
     await nav('health');
     await page.getByText('Terhubung', { exact: true }).first().waitFor();
     await nav('account');
-    await page.getByText('Super admin', { exact: true }).waitFor();
+    await page.locator('.account-profile dd', { hasText: /^Super admin$/ }).waitFor();
     await page.setViewportSize({ width: 390, height: 844 });
     assert.equal(
       await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
@@ -406,6 +416,7 @@ test('all 43 CMS endpoints remain reachable through their UI flows', async ({ br
     await page.locator('.live-stats').waitFor();
     await page.getByRole('button', { name: 'Buka navigasi' }).click();
     await page.locator('#profile').click();
+    await page.locator('#profile-logout').click();
     await page.getByRole('heading', { name: 'Selamat datang kembali.' }).waitFor();
     const stored = await page.evaluate(() => JSON.stringify({ ...localStorage }));
     assert.ok(!stored.includes('ONE-TIME-MOCK-TOKEN'));

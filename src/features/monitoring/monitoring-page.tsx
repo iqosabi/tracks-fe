@@ -1,11 +1,11 @@
-import { ResponseContext } from '../../shared/ui/response-context';
 import { useCallback, useState } from 'react';
+import { apiFor } from '../../core/api/client';
 import type { AuthClient } from '../../core/auth/client';
 import type { TablePage } from '../../core/types';
-import { apiFor } from '../../core/api/client';
-import { DataTableView } from '../../shared/ui/data-table/data-table';
+import { statusText } from '../../shared/data/formatters';
 import { usePolling } from '../../shared/hooks/use-polling';
-import { time, statusText } from '../../shared/data/formatters';
+import { DataTableView } from '../../shared/ui/data-table/data-table';
+import { ResponseContext } from '../../shared/ui/response-context';
 import { alertRows } from '../maps/data';
 import { monitoringApi } from './api';
 export function MonitoringPage({
@@ -36,13 +36,6 @@ export function MonitoringPage({
   return (
     <>
       <div className="monitor-toolbar">
-        <span id="poll-state" role="status">
-          {state.busy
-            ? 'Memperbarui data…'
-            : state.updatedAt
-              ? 'Terakhir diperbarui ' + time(state.updatedAt)
-              : 'Belum ada data yang berhasil diterima.'}
-        </span>
         <label>
           <input
             id="auto-poll"
@@ -104,9 +97,6 @@ export function MonitoringPage({
                 : 'Kendaraan yang perlu diperhatikan'}
             </p>
           </div>
-          <span className="muted">
-            {state.updatedAt ? 'Diterima ' + time(state.updatedAt) : ''}
-          </span>
         </div>
         {state.error ? (
           <div className="notice error" role="alert">

@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import type { User } from '../core/auth/schema';
+import { isModuleId, moduleVisible } from '../features/management/definitions';
 import { icon, type IconName } from '../shared/ui/icons';
 import { groups } from './navigation';
-import { isModuleId, moduleVisible } from '../features/management/definitions';
-import { pageTitle, pageDescription, type PageId } from './routes';
-import { sidebarPreferences, persistSidebar } from './preferences';
+import { persistSidebar, sidebarPreferences } from './preferences';
+import { pageDescription, pageTitle, type PageId } from './routes';
 export function Icon({ name }: { name: IconName }) {
   return <span aria-hidden="true" dangerouslySetInnerHTML={{ __html: icon(name) }} />;
 }
@@ -14,21 +14,11 @@ interface Props {
   user: User;
   demo: boolean;
   onNavigate: (page: PageId) => void;
-  onLogout: () => void;
   onConnect: () => void;
   onRefresh: () => void;
   children: ReactNode;
 }
-export function Shell({
-  page,
-  user,
-  demo,
-  onNavigate,
-  onLogout,
-  onConnect,
-  onRefresh,
-  children,
-}: Props) {
+export function Shell({ page, user, demo, onNavigate, onConnect, onRefresh, children }: Props) {
   const [preferences, setPreferences] = useState(sidebarPreferences);
   const [mobile, setMobile] = useState(false);
   const [narrow, setNarrow] = useState(() => matchMedia('(max-width:700px)').matches);
@@ -66,17 +56,13 @@ export function Shell({
       />
       <aside className="sidebar">
         <div className="sidebar-brand-row">
-          <a href="#" className="brand" aria-label="AMJ">
+          <a href="#" className="brand" aria-label="AMJ Fleets">
             <img src="/assets/amj-logo.svg" alt="AMJ" />
+            <span className="sidebar-brand-label">
+              <span>AMJ Fleets</span>
+              <small>Ananda Jaya Makmur</small>
+            </span>
           </a>
-          <button
-            id="sidebar-close"
-            className="icon-button"
-            aria-label="Tutup sidebar"
-            onClick={() => toggle(false)}
-          >
-            <Icon name="menu" />
-          </button>
         </div>
         <nav id="workspace-navigation">
           {groups.map((group) => {
@@ -106,7 +92,9 @@ export function Shell({
                 <summary className={`nav-parent ${active ? 'has-active' : ''}`}>
                   <Icon name={group.icon} />
                   <span>{group.label}</span>
-                  <Icon name="chevron" />
+                  <span className="group-chevron" aria-hidden="true">
+                    <Icon name="chevron" />
+                  </span>
                 </summary>
                 <div className="nav-children">
                   {entries.map((entry) => (
@@ -135,13 +123,19 @@ export function Shell({
           Pengaturan
         </button>
         <div className="sidebar-bottom">
-          <button className="user-profile" id="profile" onClick={onLogout}>
+          <button
+            className="user-profile"
+            id="profile"
+            aria-label="Buka profil akun"
+            aria-current={page === 'account' ? 'page' : undefined}
+            onClick={() => navigate('account')}
+          >
             <span className="avatar">{user.username.slice(0, 2).toUpperCase()}</span>
             <span>
               <strong>{user.username}</strong>
               <small>{user.role.replaceAll('_', ' ').toLowerCase()}</small>
             </span>
-            <Icon name="logout" />
+            <Icon name="chevron" />
           </button>
         </div>
       </aside>
@@ -167,10 +161,10 @@ export function Shell({
             <strong>{pageTitle(page)}</strong>
           </div>
           <div className="topbar-right">
-            <span className="environment">
+            {/* <span className="environment">
               <i />
               {demo ? 'Mode demo' : 'Sesi CMS aktif'}
-            </span>
+            </span> */}
             <button
               className="icon-button"
               aria-label="Buka notifikasi"

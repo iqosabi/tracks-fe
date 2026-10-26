@@ -240,7 +240,7 @@ export const modules: Record<ModuleId, ModuleDefinition> = {
   account: {
     title: 'Profil akun',
     description: 'Identitas akun, role, dan operator yang sedang aktif.',
-    icon: 'shield',
+    icon: 'user',
     path: '/auth/me',
     kind: 'profile',
     profile: true,

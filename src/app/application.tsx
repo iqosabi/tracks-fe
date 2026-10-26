@@ -14,6 +14,7 @@ import { SettingsPage } from '../features/settings/settings-page';
 import { DemoPage } from '../features/demo/demo-page';
 import { LoginPage } from '../features/auth/login-page';
 import { OverviewPage } from '../features/overview/overview-page';
+import { ProfilePage } from '../features/profile/profile-page';
 const MapPage = lazy(() =>
   import('../features/maps/map-page').then((module) => ({ default: module.MapPage })),
 );
@@ -92,7 +93,6 @@ function Application({ notify }: { notify: (message: string) => void }) {
       demo={demo}
       onNavigate={setPage}
       onConnect={configure}
-      onLogout={() => logout()}
       onRefresh={() => setRevision((value) => value + 1)}
     >
       {page === 'overview' ? (
@@ -101,6 +101,15 @@ function Application({ notify }: { notify: (message: string) => void }) {
         <Suspense fallback={<div className="monitor-empty">Memuat peta…</div>}>
           <MapPage auth={session.auth} demo={demo} revision={revision} />
         </Suspense>
+      ) : page === 'account' ? (
+        <ProfilePage
+          key={`${demo}:${user.id}`}
+          auth={session.auth}
+          user={user}
+          demo={demo}
+          revision={revision}
+          onLogout={() => logout()}
+        />
       ) : page === 'settings' ? (
         <SettingsPage
           auth={session.auth}

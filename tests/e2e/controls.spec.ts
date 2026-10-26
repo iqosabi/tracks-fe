@@ -105,11 +105,23 @@ test('sidebar, data tables, filters, record actions and CARTO configuration', as
     await group.locator('summary').click();
     assert.equal(await group.locator('[data-page=fleet]').isVisible(), false);
     await group.locator('summary').click();
-    await page.locator('#sidebar-close').click();
+    assert.equal(await page.locator('#sidebar-close').count(), 0);
+    const sidebarLogoSize = await page.locator('.sidebar-brand-row .brand img').evaluate((el) => {
+      const { width, height, top } = el.getBoundingClientRect();
+      return { width, height, top };
+    });
+    await page.locator('#menu').click();
     assert.ok(
       await page.locator('.workspace').evaluate((e) => e.classList.contains('sidebar-collapsed')),
     );
     assert.equal(await page.locator('.header-brand').isVisible(), true);
+    assert.deepEqual(
+      await page.locator('.header-brand img').evaluate((el) => {
+        const { width, height, top } = el.getBoundingClientRect();
+        return { width, height, top };
+      }),
+      sidebarLogoSize,
+    );
     assert.equal(
       await page.locator('.main').evaluate((e) => Math.round(e.getBoundingClientRect().left)),
       0,

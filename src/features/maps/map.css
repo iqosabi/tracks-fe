@@ -1,9 +1,9 @@
 .reference-map {
-  --map-panel: #1e2454;
-  --map-border: #4c5685;
+  --map-panel: #1b2332;
+  --map-border: #354155;
   --map-text: #edf0ff;
   --map-muted: #adb8df;
-  --map-input: #202654;
+  --map-input: #1b2332;
   background: #101316;
   color: var(--map-text);
   container-type: inline-size;
@@ -32,6 +32,8 @@
   pointer-events: auto;
 }
 .reference-map .map-controls .field {
+  position: relative;
+  min-width: 0;
   display: block;
   margin: 0;
   font-size: 0;
@@ -42,10 +44,10 @@
   height: 42px;
   min-height: 42px;
   border: 1px solid var(--map-border);
-  border-radius: 7px;
+  border-radius: 10px;
   background: var(--map-input);
   color: var(--map-text);
-  box-shadow: 0 2px 10px #0002;
+  box-shadow: 0 2px 8px #0002;
   font-size: 12px;
 }
 .reference-map .map-controls input {
@@ -57,8 +59,22 @@
 }
 .reference-map .map-controls select {
   width: 150px;
-  padding: 0 28px 0 12px;
+  padding: 0 34px 0 12px;
+  text-overflow: ellipsis;
   color-scheme: dark;
+}
+.reference-map .map-search {
+  position: relative;
+  min-width: 0;
+}
+.reference-map .map-controls :is(input, select, button):focus-visible,
+.reference-map :is(.map-fit, .map-theme-switch button):focus-visible {
+  outline: 2px solid #7d9dff;
+  outline-offset: 2px;
+}
+.reference-map .map-controls .button:not(:disabled):hover,
+.reference-map .map-fit:hover {
+  background: var(--map-border);
 }
 .reference-map.map-theme-light .map-controls select {
   color-scheme: light;
@@ -66,11 +82,15 @@
 .reference-map .map-controls small {
   color: var(--map-muted);
   flex-basis: 100%;
-  width: max-content;
+  width: fit-content;
   font-size: 10px;
   margin-top: 0;
+  padding: 5px 9px;
+  border: 1px solid var(--map-border);
+  border-radius: 7px;
+  background: var(--map-panel);
   pointer-events: none;
-  text-shadow: 0 1px 4px #0008;
+  text-shadow: none;
 }
 .reference-map.map-theme-light .map-controls small {
   text-shadow: none;
@@ -78,8 +98,8 @@
 .reference-map .map-search-results {
   position: absolute;
   left: 0;
-  top: 48px;
-  width: 260px;
+  top: calc(100% + 6px);
+  width: 100%;
   max-height: 260px;
   flex-basis: auto;
   border: 1px solid var(--map-border);
@@ -91,6 +111,8 @@
   z-index: 10;
 }
 .reference-map .map-search-results .button {
+  box-shadow: none;
+  border-color: transparent;
   width: 100%;
   text-align: left;
 }
@@ -151,16 +173,16 @@
   left: 20px;
   z-index: 600;
   display: flex;
-  gap: 5px;
-  padding: 7px;
+  gap: 3px;
+  padding: 4px;
   background: var(--map-panel);
   border: 1px solid var(--map-border);
   border-radius: 9px;
   box-shadow: 0 2px 16px #0003;
 }
 .reference-map .map-theme-switch button {
-  min-width: 82px;
-  height: 34px;
+  min-width: 64px;
+  height: 32px;
   border: 0;
   border-radius: 6px;
   background: transparent;
@@ -180,7 +202,9 @@
   color: var(--map-text);
   border-color: var(--map-border);
   gap: 14px;
-  padding: 13px 16px;
+  padding: 10px 12px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .reference-map .map-key > span {
   font-size: 10px;
@@ -190,7 +214,7 @@
   width: 9px;
   height: 9px;
   display: inline-block;
-  border-radius: 2px;
+  border-radius: 50%;
   background: #18c675;
   flex-shrink: 0;
 }
@@ -215,6 +239,11 @@
   backdrop-filter: none;
 }
 .reference-map .map-fit {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  cursor: pointer;
   bottom: 70px;
   left: 20px;
   right: auto;
@@ -269,6 +298,33 @@
   width: 78%;
   height: 78%;
 }
+.reference-map .bus-marker-heading {
+  position: absolute;
+  width: calc(var(--bus-marker-size, 20px) + 22px);
+  height: calc(var(--bus-marker-size, 20px) + 22px);
+  pointer-events: none;
+}
+.reference-map .bus-marker-heading svg {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 9px;
+  fill: #b7caff;
+  stroke: #1b2332;
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.reference-map .map-point.overspeed .bus-marker-heading svg {
+  fill: #ff8296;
+}
+.reference-map .map-point.offline .bus-marker-heading svg {
+  fill: #b2bccd;
+}
+.reference-map .map-point.delay .bus-marker-heading svg {
+  fill: #f4a72c;
+}
 .reference-map .map-point.selected .bus-marker-symbol {
   outline: 3px solid #e61436;
   outline-offset: 3px;
@@ -283,7 +339,7 @@
 }
 .reference-map .bus-marker-label {
   position: absolute;
-  top: calc(22px + var(--bus-marker-size, 20px) / 2 + 3px);
+  top: calc(22px + var(--bus-marker-size, 20px) / 2 + 12px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -335,16 +391,23 @@
     inset: 10px 10px auto;
     gap: 6px;
   }
+  .reference-map .map-search,
+  .reference-map .map-controls .map-filter {
+    flex: 1 1 calc(50% - 6px);
+  }
   .reference-map .map-controls input {
-    width: 170px;
+    width: 100%;
   }
   .reference-map .map-controls select {
-    width: calc((100vw - 32px) / 2);
-    max-width: 170px;
+    width: 100%;
   }
   .reference-map .map-controls .button {
     height: 38px;
     padding: 0 12px;
+  }
+  .reference-map .map-search-results .button {
+    height: auto;
+    min-height: 42px;
   }
   .reference-map .map-controls input,
   .reference-map .map-controls select {

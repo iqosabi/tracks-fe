@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { ApiRecord, Notify } from '../../core/types';
+import { date, number } from '../../shared/data/formatters';
 import { DataTableView } from '../../shared/ui/data-table/data-table';
 import { DialogView } from '../../shared/ui/react-dialog';
-import { date, number } from '../../shared/data/formatters';
 import { fleet } from './data';
 const rows: ApiRecord[] = fleet.map(
   ([bodyNo, plateNo, routeName, status, speedKph, batteryPercent], index) => ({
@@ -19,7 +19,7 @@ export function DemoPage({ view, notify }: { view: 'fleet' | 'alerts'; notify: N
   const [selected, setSelected] = useState<ApiRecord | null>(null);
   function exportCsv() {
     const csv = [
-      ['Bus', 'Plat', 'Rute', 'Status', 'Kecepatan km/j', 'Baterai %', 'Waktu'],
+      ['Bus', 'Plat', 'Rute', 'Status', 'Kecepatan KM/J', 'Baterai %', 'Waktu'],
       ...rows.map((row) => [
         row.bodyNo,
         row.plateNo,
@@ -83,7 +83,7 @@ export function DemoPage({ view, notify }: { view: 'fleet' | 'alerts'; notify: N
           <p>{String(selected.routeName)}</p>
           <div className="detail-grid">
             <span>
-              Kecepatan<strong>{number(selected.speedKph)} km/j</strong>
+              Kecepatan<strong>{number(selected.speedKph)} KM/J</strong>
             </span>
             <span>
               Baterai GPS<strong>{number(selected.batteryPercent)}%</strong>

@@ -3,9 +3,13 @@ import { fleetPath } from '../monitoring/api';
 import { items } from '../../shared/data/records';
 import { paginationMeta } from '../../shared/data/pagination';
 import type { ApiRecord } from '../../core/types';
-import { busPositions } from './data';
+import { busPositions, offlineAfterMs } from './data';
 /** Bounded traversal, with an explicit coverage notice rather than a partial fleet presented as complete. */
 export async function loadMap(api: ApiClient, signal: AbortSignal, maxPages = 25) {
+  const thresholdPromise = api
+    .request('/monitoring/summary', { signal })
+    .then(offlineAfterMs)
+    .catch(() => offlineAfterMs(null));
   const alertsPromise = api
     .request('/monitoring/alerts', { signal })
     .then((data) => ({ data, error: '' }))
@@ -25,9 +29,14 @@ export async function loadMap(api: ApiClient, signal: AbortSignal, maxPages = 25
     }
     return { rows, truncated: true };
   })();
-  const [vehicles, alerts] = await Promise.all([vehiclesPromise, alertsPromise]);
+  const [vehicles, alerts, thresholdMs] = await Promise.all([
+    vehiclesPromise,
+    alertsPromise,
+    thresholdPromise,
+  ]);
   return {
     positions: busPositions(vehicles.rows, alerts.data),
+    offlineAfterMs: thresholdMs,
     truncated: vehicles.truncated,
     alertError: alerts.error,
   };

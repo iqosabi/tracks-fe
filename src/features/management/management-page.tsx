@@ -10,7 +10,7 @@ import { useRequest } from '../../shared/hooks/use-request';
 import { DataTableView } from '../../shared/ui/data-table/data-table';
 import { record, messageOf } from '../../shared/data/guards';
 import { pick } from '../../shared/data/presentation';
-import { statusText, time } from '../../shared/data/formatters';
+import { statusText } from '../../shared/data/formatters';
 import {
   modules,
   canWrite,
@@ -255,9 +255,7 @@ export function ManagementPage({ id, auth, revision, notify }: Props) {
           <div className="notice error">{filterError || state.error}</div>
         ) : state.busy ? (
           'Memperbarui…'
-        ) : state.updatedAt ? (
-          'Diperbarui ' + time(state.updatedAt)
-        ) : spec.history ? (
+        ) : spec.history && !state.updatedAt ? (
           'Pilih perangkat untuk menampilkan riwayat GPS.'
         ) : (
           ''

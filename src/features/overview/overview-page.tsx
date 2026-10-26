@@ -1,9 +1,8 @@
 import { useCallback } from 'react';
+import { apiFor } from '../../core/api/client';
 import type { AuthClient } from '../../core/auth/client';
 import type { Role } from '../../core/auth/schema';
-import { apiFor } from '../../core/api/client';
 import { usePolling } from '../../shared/hooks/use-polling';
-import { time } from '../../shared/data/formatters';
 import { loadCounts, loadFleetSummary } from './api';
 import { fleetMetrics, type Metric } from './data';
 function Cards({ metrics, fleet = false }: { metrics: Metric[]; fleet?: boolean }) {
@@ -62,14 +61,7 @@ export function OverviewPage({
   const inventory = usePolling(loadInventory, 60000, revision);
   return (
     <div className="overview-cards">
-      <div className="monitor-toolbar">
-        <span role="status">
-          {demo
-            ? 'Data ilustrasi'
-            : `Cakupan ${role === 'SUPER_ADMIN' ? 'seluruh operator' : 'operator akun Anda'}`}{' '}
-          · {summary.updatedAt ? `Diperbarui ${time(summary.updatedAt)}` : 'Memuat ringkasan…'}
-        </span>
-      </div>
+      <div className="monitor-toolbar"></div>
       {summary.error ? (
         <div className="notice error" role="alert">
           {summary.error}
@@ -91,11 +83,6 @@ export function OverviewPage({
         </div>
       ) : null}
       <Cards metrics={inventory.data ?? []} />
-      <p className="muted">
-        {demo
-          ? 'Angka demo untuk ilustrasi.'
-          : 'Data mengikuti izin dan scope sesi API. Nilai — berarti data belum tersedia. Jumlah ≥ menandakan pemuatan belum lengkap.'}
-      </p>
     </div>
   );
 }

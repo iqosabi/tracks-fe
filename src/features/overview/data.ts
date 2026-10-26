@@ -1,7 +1,7 @@
 import type { Role } from '../../core/auth/schema';
-import { pick, items } from '../../shared/data/records';
+import { bytes, duration, number } from '../../shared/data/formatters';
 import { record } from '../../shared/data/guards';
-import { number, bytes, date } from '../../shared/data/formatters';
+import { items, pick } from '../../shared/data/records';
 export interface Metric {
   label: string;
   value: string;
@@ -54,7 +54,7 @@ export function fleetMetrics(payload: unknown): Metric[] {
   const definitions: [string, string[]][] = [
     ['Total armada', ['totalBuses', 'total', 'totalVehicles', 'vehicleCount', 'totalCount']],
     ['Total perangkat', ['totalDevices']],
-    ['Laporan bantuan terbuka', ['openHelpReports']],
+    ['Laporan terbuka', ['openHelpReports']],
     ['Beroperasi', ['active', 'activeCount']],
     ['Berhenti', ['idle', 'idleCount']],
     ['Terlambat', ['delay', 'delayed', 'delayedCount']],
@@ -79,14 +79,7 @@ export function fleetMetrics(payload: unknown): Metric[] {
     ['Batas lag perangkat', 'thresholds.deviceLagSec'],
   ]) {
     const value = pick(payload, key);
-    if (value !== undefined) metrics.push({ label, value: number(value) + ' dtk', text: true });
-  }
-  for (const [label, key] of [
-    ['Data terakhir diterima', 'latestReceivedAt'],
-    ['Waktu pengukuran', 'measuredAt'],
-  ]) {
-    const value = pick(payload, key);
-    if (value !== undefined) metrics.push({ label, value: date(value), text: true });
+    if (value !== undefined) metrics.push({ label, value: duration(value), text: true });
   }
   return metrics;
 }

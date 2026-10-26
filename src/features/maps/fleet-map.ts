@@ -11,6 +11,7 @@ export interface FleetPosition {
   id?: string;
   overspeed?: boolean;
   selected?: boolean;
+  heading?: number | null;
 }
 export interface FleetMap {
   update(data: FleetPosition[]): void;
@@ -20,12 +21,12 @@ export interface FleetMap {
   destroy(): void;
 }
 export const demoPositions: FleetPosition[] = [
-  { lat: -6.244, lng: 106.8, label: 'TRK-001', status: 'ACTIVE' },
-  { lat: -6.198, lng: 106.823, label: 'TRK-002', status: 'ACTIVE' },
-  { lat: -6.207, lng: 106.824, label: 'TRK-003', status: 'IDLE' },
-  { lat: -6.259, lng: 106.877, label: 'TRK-004', status: 'ACTIVE' },
+  { lat: -6.244, lng: 106.8, label: 'TRK-001', status: 'ACTIVE', heading: 45 },
+  { lat: -6.198, lng: 106.823, label: 'TRK-002', status: 'ACTIVE', heading: 90 },
+  { lat: -6.207, lng: 106.824, label: 'TRK-003', status: 'IDLE', heading: 180 },
+  { lat: -6.259, lng: 106.877, label: 'TRK-004', status: 'ACTIVE', heading: 225 },
   { lat: -6.3, lng: 106.821, label: 'TRK-005', status: 'OFFLINE' },
-  { lat: -6.174, lng: 106.791, label: 'TRK-006', status: 'ACTIVE' },
+  { lat: -6.174, lng: 106.791, label: 'TRK-006', status: 'ACTIVE', heading: 315 },
 ];
 export function createFleetMap(
   container: HTMLElement,
@@ -35,7 +36,7 @@ export function createFleetMap(
   }: { onSelect?: (position: FleetPosition) => void; demo?: boolean; floating?: boolean } = {},
 ): FleetMap {
   container.innerHTML =
-    '<div class="carto-canvas" aria-label="Peta armada CARTO interaktif"></div><div class="map-status" role="status">Memuat peta CARTO…</div><button type="button" class="map-fit" aria-label="Tampilkan semua kendaraan">⊞ <span>Semua armada</span></button><div class="map-key"><span><i class="map-status-dot normal"></i>Normal</span><span><i class="map-status-dot delay"></i>Delay / berhenti</span><span><i class="map-status-dot offline"></i>Tidak aktif</span><span><i class="map-status-dot overspeed"></i>Overspeed</span></div>';
+    '<div class="carto-canvas" aria-label="Peta armada CARTO interaktif"></div><div class="map-status" role="status">Memuat peta CARTO…</div><button type="button" class="map-fit" aria-label="Tampilkan semua kendaraan"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><circle cx="12" cy="12" r="3"/></svg><span>Semua armada</span></button><div class="map-key"><span><i class="map-status-dot normal"></i>Normal</span><span><i class="map-status-dot delay"></i>Delay / berhenti</span><span><i class="map-status-dot offline"></i>Tidak aktif</span><span><i class="map-status-dot overspeed"></i>Overspeed</span></div>';
   const status = query('.map-status', container);
   const map = L.map(query('.carto-canvas', container), {
     scrollWheelZoom: true,

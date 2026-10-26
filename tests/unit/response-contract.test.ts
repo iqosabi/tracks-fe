@@ -72,7 +72,7 @@ test('summary and position use actual v1.1 names without assuming counts from pa
   );
   expect(position?.busTime).toBe('2026-10-25T02:59:58.000Z');
   expect(position?.speed).toBe(36);
-  expect(delayText(position?.delayMs ?? null)).toBe('00:00:01.000');
+  expect(delayText(position?.delayMs ?? null)).toBe('1 Detik');
   expect(totalCount(payload('/cms/users'), true)).toBe('1');
   expect(totalCount(payload('/cms/buses'))).toBe('—');
 });

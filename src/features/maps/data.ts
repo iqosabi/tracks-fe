@@ -2,6 +2,7 @@ import type { ApiRecord } from '../../core/types';
 import { items, pick, vehicleName } from '../../shared/data/records';
 import { record } from '../../shared/data/guards';
 import type { FleetPosition } from './fleet-map';
+import { format } from '../../shared/data/formatters';
 export interface BusPosition extends FleetPosition {
   id: string;
   operatorLabel?: string;
@@ -10,6 +11,32 @@ export interface BusPosition extends FleetPosition {
   speed: number | null;
   busTime: unknown;
   delayMs: number | null;
+}
+export const defaultOfflineAfterMs = 90_000;
+export function offlineAfterMs(payload: unknown): number {
+  const root = record(payload);
+  const data = record(root.data ?? root);
+  const seconds = numeric(record(data.thresholds).offlineSec);
+  return seconds !== null && seconds > 0 && Number.isFinite(seconds * 1000)
+    ? seconds * 1000
+    : defaultOfflineAfterMs;
+}
+export function withBusFreshness(
+  bus: BusPosition,
+  now: number,
+  thresholdMs = defaultOfflineAfterMs,
+): BusPosition {
+  if (
+    typeof bus.busTime !== 'string' &&
+    typeof bus.busTime !== 'number' &&
+    !(bus.busTime instanceof Date)
+  )
+    return bus;
+  if (typeof bus.busTime === 'string' && !bus.busTime.trim()) return bus;
+  const timestamp = new Date(bus.busTime).getTime();
+  const ageMs = now - timestamp;
+  if (!Number.isFinite(ageMs) || ageMs < thresholdMs) return bus;
+  return { ...bus, status: 'OFFLINE', delayMs: ageMs, overspeed: false };
 }
 function numeric(value: unknown): number | null {
   if (
@@ -83,6 +110,7 @@ export function busPositions(rows: ApiRecord[], alerts: unknown): BusPosition[] 
         routeCode: String(pick(row, 'routeCode') ?? ''),
         lat,
         lng,
+        heading: numeric(pick(row, 'bearingDegrees', 'heading', 'bearing', 'course')),
         label: String(vehicleName(row) ?? 'Kendaraan'),
         status: String(pick(row, 'status') ?? ''),
         overspeed: isOverspeed(row) || overspeedIds.has(id),
@@ -94,10 +122,5 @@ export function busPositions(rows: ApiRecord[], alerts: unknown): BusPosition[] 
   });
 }
 export function delayText(ms: number | null): string {
-  if (ms === null || ms < 0) return '—';
-  const total = Math.floor(ms);
-  const h = Math.floor(total / 3600000),
-    m = Math.floor(total / 60000) % 60,
-    s = Math.floor(total / 1000) % 60;
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(total % 1000).padStart(3, '0')}`;
+  return format(ms, 'ms');
 }

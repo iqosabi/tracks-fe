@@ -40,7 +40,12 @@ test('overspeed requires explicit API evidence; speed alone does not create an a
   expect(result[0]?.delayMs).toBe(2333);
   expect(result[0]?.speed).toBe(0);
   expect(busPositions([{ latitude: 91, longitude: 1 }], [])).toHaveLength(0);
-  expect(delayText(2333)).toBe('00:00:02.333');
+  expect(delayText(2333)).toBe('2,33 Detik');
+  expect(delayText(2717)).toBe('2,72 Detik');
+  expect(delayText(120000)).toBe('2 Menit');
+  expect(delayText(3600000)).toBe('1 Jam');
+  expect(delayText(0)).toBe('0 Detik');
+  expect(delayText(-1)).toBe('—');
   expect(delayText(null)).toBe('—');
 });
 
@@ -79,4 +84,14 @@ test('missing bus timestamp never invents a zero delay from receivedAt', () => {
   );
   expect(bus?.busTime).toBeUndefined();
   expect(bus?.delayMs).toBeNull();
+});
+test('map positions preserve zero and numeric GPS headings without inventing missing ones', () => {
+  const rows = [
+    { bearingDegrees: 0 },
+    { bearingDegrees: '90' },
+    { heading: 180 },
+    { bearingDegrees: 'invalid' },
+    {},
+  ].map((row) => ({ latitude: 0, longitude: 0, ...row }));
+  expect(busPositions(rows, []).map((bus) => bus.heading)).toEqual([0, 90, 180, null, null]);
 });

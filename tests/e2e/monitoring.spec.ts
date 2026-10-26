@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 test('role-scoped card overview and conditional bus overlays on the full map', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-10-24T06:01:14.678Z'));
   const calls: string[] = [];
   let overspeed = false;
   const busTime = '2026-10-24T06:01:12.345Z';
@@ -67,7 +68,7 @@ test('role-scoped card overview and conditional bus overlays on the full map', a
   await page.locator('[name=password]').fill('synthetic');
   await page.getByRole('button', { name: 'Masuk ke workspace' }).click();
   await expect(page.locator('.live-stats').first()).toBeVisible();
-  await expect(page.locator('.overview-cards')).toContainText('operator akun Anda');
+  await expect(page.locator('.overview-cards h2').first()).toContainText('Kondisi armada');
   await expect(page.locator('.content .leaflet-container')).toHaveCount(0);
   await expect(page.locator('.content table')).toHaveCount(0);
   expect(calls.some((path) => /\/cms\/(users|audit|operators)$/.test(path))).toBe(false);
@@ -84,8 +85,8 @@ test('role-scoped card overview and conditional bus overlays on the full map', a
   for (const label of ['Bus', 'Lat', 'Lon', 'Time bus', 'Delay', 'Speed'])
     await expect(selected.locator('dt', { hasText: new RegExp(`^${label}$`) })).toBeVisible();
   await expect(selected).toContainText('13:01:12.345 WIB');
-  await expect(selected).toContainText('00:00:02.333');
-  await expect(selected).toContainText('42 km/j');
+  await expect(selected).toContainText('2,33 Detik');
+  await expect(selected).toContainText('42 KM/J');
   overspeed = true;
   await page.locator('.map-controls button', { hasText: 'Perbarui' }).click();
   await expect(page.locator('.floating-bus-card.overspeed')).toContainText('BUS-002');
@@ -95,6 +96,14 @@ test('role-scoped card overview and conditional bus overlays on the full map', a
   overspeed = false;
   await page.locator('.map-controls button', { hasText: 'Perbarui' }).click();
   await expect(page.locator('.floating-bus-card')).toHaveCount(0);
+  await page.clock.setFixedTime(new Date('2026-10-24T06:02:45.678Z'));
+  overspeed = true;
+  await page.locator('.map-controls button', { hasText: 'Perbarui' }).click();
+  await expect(page.locator('.map-point.offline')).toHaveCount(2);
+  await expect(page.locator('.floating-bus-card.overspeed')).toHaveCount(0);
+  await page.locator('.fleet-map-marker[title=BUS-001]').click();
+  await expect(selected).toContainText('Nonaktif');
+  await expect(selected).toContainText('1 Menit 33,33 Detik');
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

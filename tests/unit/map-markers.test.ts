@@ -17,3 +17,17 @@ test('marker labels escape backend text and preserve real vehicle status', () =>
   expect(markerTone({ ...position, overspeed: true })).toBe('overspeed');
   expect(markerTone({ ...position, status: 'OFFLINE' })).toBe('offline');
 });
+test('heading arrows use clockwise GPS degrees and omit unknown directions', () => {
+  const position = { lat: 0, lng: 0, label: 'BUS' };
+  for (const [heading, rotation] of [
+    [0, 0],
+    [90, 90],
+    [-90, 270],
+    [450, 90],
+  ]) {
+    expect(markerHtml({ ...position, heading })).toContain(`transform:rotate(${rotation}deg)`);
+  }
+  for (const heading of [undefined, null, NaN, Infinity]) {
+    expect(markerHtml({ ...position, heading })).not.toContain('bus-marker-heading');
+  }
+});

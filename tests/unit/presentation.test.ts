@@ -29,9 +29,21 @@ test('bytes format through KB, MB, GB without converting source strings to float
 test('counts and time intervals use their own units', () => {
   assert.equal(number('33933'), '33.933');
   assert.equal(number('9007199254740993123'), '9.007.199.254.740.993.123');
-  assert.equal(format(10000, 'ms'), '10 dtk');
+  assert.equal(format(10000, 'ms'), '10 Detik');
   assert.equal(format(32, 'speed'), '32 km/j');
   assert.match(date('2026-10-24T06:00:00Z'), /13:00:00.000 WIB/);
+});
+test('durations display hours and minutes consistently for seconds and milliseconds', () => {
+  assert.equal(format(125899, 'seconds'), '34 Jam 58 Menit 19 Detik');
+  assert.equal(format(120, 'seconds'), '2 Menit');
+  assert.equal(format('3661.25', 'seconds'), '1 Jam 1 Menit 1,25 Detik');
+  assert.equal(format(3600000, 'ms'), '1 Jam');
+  assert.equal(format(59.999, 'seconds'), '1 Menit');
+  assert.equal(format(0, 'seconds'), '0 Detik');
+  for (const value of [null, '', ' ', 'invalid', -1, NaN, Infinity, true]) {
+    assert.equal(format(value, 'seconds'), '—');
+    assert.equal(format(value, 'ms'), '—');
+  }
 });
 test('readable tables hide raw IDs, tokens, hashes, and unknown fields', () => {
   const html = table(
@@ -50,7 +62,7 @@ test('readable tables hide raw IDs, tokens, hashes, and unknown fields', () => {
     'devices',
   );
   assert.match(html, /OBU 01/);
-  assert.match(html, /10 dtk/);
+  assert.match(html, /10 Detik/);
   for (const text of ['internal-uuid', 'secret-hash', '778812', 'raw-debug', 'configVersion'])
     assert.ok(!html.includes(text));
 });

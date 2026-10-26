@@ -20,6 +20,25 @@ export const number = (v: unknown, digits = 0): string => {
   const n = Number(v);
   return Number.isFinite(n) ? n.toLocaleString('id-ID', { maximumFractionDigits: digits }) : '—';
 };
+export function duration(seconds: unknown): string {
+  if (
+    (typeof seconds !== 'number' && typeof seconds !== 'string') ||
+    (typeof seconds === 'string' && !seconds.trim())
+  )
+    return '—';
+  const value = Number(seconds);
+  if (!Number.isFinite(value) || value < 0) return '—';
+  const hundredths = Math.round(value * 100);
+  if (!Number.isSafeInteger(hundredths)) return '—';
+  const hours = Math.floor(hundredths / 360000);
+  const minutes = Math.floor((hundredths % 360000) / 6000);
+  const remainder = (hundredths % 6000) / 100;
+  const parts: string[] = [];
+  if (hours) parts.push(`${number(hours)} Jam`);
+  if (minutes) parts.push(`${number(minutes)} Menit`);
+  if (remainder || !parts.length) parts.push(`${number(remainder, 0)} Detik`);
+  return parts.join(' ');
+}
 export function bytes(value: unknown): string {
   if (value === null || value === undefined || value === '') return '—';
   let n;
@@ -129,10 +148,13 @@ export function format(value: unknown, type: ValueFormat = 'text'): string {
   if (type === 'boolean') return value === true ? 'Aktif' : value === false ? 'Nonaktif' : '—';
   if (type === 'status') return statusText(value);
   if (type === 'number') return number(value);
-  if (type === 'ms') return number(Number(value) / 1000, 2) + ' dtk';
-  if (type === 'seconds') return number(value, 2) + ' dtk';
+  if (type === 'ms')
+    return typeof value === 'number' || (typeof value === 'string' && value.trim())
+      ? duration(Number(value) / 1000)
+      : '—';
+  if (type === 'seconds') return duration(value);
   if (type === 'coordinate') return number(value, 6);
-  if (type === 'speed') return number(value, 1) + ' km/j';
+  if (type === 'speed') return number(value, 0) + ' KM/J';
   if (type === 'percent') return number(value, 1) + '%';
   if (type === 'meters') return number(value, 1) + ' m';
   if (typeof value === 'number' || typeof value === 'bigint') return number(value, 2);

@@ -1,15 +1,15 @@
-import './map.css';
-import { readPreference, writePreference } from '../../core/config/storage';
-import type { MapTheme } from './marker-layout';
-import { useCallback, useMemo, useState } from 'react';
-import type { AuthClient } from '../../core/auth/client';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFor } from '../../core/api/client';
+import type { AuthClient } from '../../core/auth/client';
+import { readPreference, writePreference } from '../../core/config/storage';
+import { date, number, statusText } from '../../shared/data/formatters';
 import { usePolling } from '../../shared/hooks/use-polling';
-import { date, number, time, statusText } from '../../shared/data/formatters';
-import { demoPositions } from './fleet-map';
-import { FleetCanvas } from './fleet-canvas';
-import { delayText, type BusPosition } from './data';
 import { loadMap } from './api';
+import { delayText, withBusFreshness, defaultOfflineAfterMs, type BusPosition } from './data';
+import { FleetCanvas } from './fleet-canvas';
+import { demoPositions } from './fleet-map';
+import './map.css';
+import type { MapTheme } from './marker-layout';
 const noPositions: BusPosition[] = [];
 function BusCard({
   bus,
@@ -26,7 +26,7 @@ function BusCard({
     ['Lon', number(bus.lng, 6)],
     ['Time bus', date(bus.busTime)],
     ['Delay', delayText(bus.delayMs)],
-    ['Speed', bus.speed === null ? '—' : `${number(bus.speed, 1)} km/j`],
+    ['Speed', bus.speed === null ? '—' : `${number(bus.speed, 0)} KM/J`],
   ];
   return (
     <article
@@ -37,8 +37,11 @@ function BusCard({
         <div>
           <strong>{bus.label}</strong>
           <small>
-            {bus.overspeed ? 'Overspeed' : statusText(bus.status)}
-            {selected ? ' · Dipilih' : ''}
+            {bus.status === 'OFFLINE'
+              ? 'Nonaktif'
+              : bus.overspeed
+                ? 'Overspeed'
+                : statusText(bus.status)}
           </small>
         </div>
         {selected ? (
@@ -77,6 +80,12 @@ export function MapPage({
   const [pageLimit, setPageLimit] = useState(25);
   const [focusRequest, setFocusRequest] = useState(0);
   const [search, setSearch] = useState('');
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    // Re-evaluate retained positions even when a polling request fails.
+    const timer = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(timer);
+  }, []);
   const select = useCallback((id: string) => {
     setSelectedId(id);
     setFocusRequest((value) => value + 1);
@@ -96,12 +105,23 @@ export function MapPage({
         })),
         truncated: false,
         alertError: '',
+        offlineAfterMs: defaultOfflineAfterMs,
       };
     },
     [auth, demo, pageLimit],
   );
   const state = usePolling(load, 15000, revision);
-  const positions: BusPosition[] = state.data?.positions ?? noPositions;
+  const positions = useMemo(
+    () =>
+      (state.data?.positions ?? noPositions).map((bus) =>
+        withBusFreshness(
+          bus,
+          Math.max(now, state.updatedAt?.getTime() ?? now),
+          state.data?.offlineAfterMs,
+        ),
+      ),
+    [state.data, state.updatedAt, now],
+  );
   const operators = [
     ...new Set(positions.map((p) => p.operatorLabel).filter((value): value is string => !!value)),
   ].sort();
@@ -139,16 +159,31 @@ export function MapPage({
         theme={theme}
       />
       <div className="map-controls">
-        <label className="field">
-          Cari bus
-          <input
-            type="search"
-            aria-label="Cari bus di peta"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Cari kendaraan…"
-          />
-        </label>
+        <div className="map-search">
+          <label className="field">
+            Cari bus
+            <input
+              type="search"
+              aria-label="Cari bus di peta"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Cari kendaraan…"
+            />
+          </label>
+          {search ? (
+            <div className="map-search-results">
+              {matches.length ? (
+                matches.map((bus) => (
+                  <button className="button secondary" key={bus.id} onClick={() => select(bus.id)}>
+                    {bus.label}
+                  </button>
+                ))
+              ) : (
+                <p>Bus tidak ditemukan.</p>
+              )}
+            </div>
+          ) : null}
+        </div>
         <label className="field map-filter">
           <span className="sr-only">Operator di peta</span>
           <select
@@ -185,7 +220,7 @@ export function MapPage({
             <option value="">Semua status</option>
             {['ACTIVE', 'IDLE', 'DELAY', 'OFFLINE', 'OVERSPEED'].map((value) => (
               <option key={value} value={value}>
-                {statusText(value)}
+                {value === 'OFFLINE' ? 'Nonaktif' : statusText(value)}
               </option>
             ))}
           </select>
@@ -201,24 +236,6 @@ export function MapPage({
           >
             Muat armada berikutnya
           </button>
-        ) : null}
-        <small role="status">
-          {demo ? 'Demo · ' : ''}
-          {state.updatedAt ? time(state.updatedAt) : 'Menghubungkan…'} · {visible.length}/
-          {positions.length} bus dengan GPS
-        </small>
-        {search ? (
-          <div className="map-search-results">
-            {matches.length ? (
-              matches.map((bus) => (
-                <button className="button secondary" key={bus.id} onClick={() => select(bus.id)}>
-                  {bus.label}
-                </button>
-              ))
-            ) : (
-              <p>Bus tidak ditemukan.</p>
-            )}
-          </div>
         ) : null}
       </div>
       <div className="map-theme-switch" role="group" aria-label="Tampilan peta">
