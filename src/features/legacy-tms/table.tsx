@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
 import type { ApiRecord } from '../../core/types';
-import { pick } from '../../shared/data/records';
-import { format, number, type ValueFormat } from '../../shared/data/formatters';
-
-type Column = { label: string; key: string; type?: ValueFormat };
-const c = (label: string, key: string, type?: ValueFormat): Column => ({ label, key, type });
+import type { Column } from '../../shared/data/columns';
+import type { ValueFormat } from '../../shared/data/formatters';
+import { DataTableView } from '../../shared/ui/data-table/data-table';
+const c = (label: string, key: string, type: ValueFormat = 'text'): Column => ({
+  label,
+  names: [key],
+  type,
+});
 export const legacyColumns = {
   operatorSummary: [
     c('Operator', 'operatorCode'),
@@ -102,92 +104,9 @@ export const legacyColumns = {
   ],
 };
 export function LegacyTable({ rows, columns }: { rows: ApiRecord[]; columns: Column[] }) {
-  const [query, setQuery] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLocaleLowerCase('id-ID');
-    return needle
-      ? rows.filter((row) =>
-          columns.some((column) =>
-            format(pick(row, column.key), column.type ?? 'text')
-              .toLocaleLowerCase('id-ID')
-              .includes(needle),
-          ),
-        )
-      : rows;
-  }, [rows, columns, query]);
-  const pages = Math.max(1, Math.ceil(filtered.length / limit));
-  const current = Math.min(page, pages),
-    offset = (current - 1) * limit;
   return (
-    <section className="legacy-table">
-      <div className="legacy-table-tools">
-        <label>
-          Cari data
-          <input
-            type="search"
-            value={query}
-            placeholder="Cari di kolom yang ditampilkan…"
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setPage(1);
-            }}
-          />
-        </label>
-        <label>
-          Baris per halaman
-          <select
-            value={limit}
-            onChange={(event) => {
-              setLimit(Number(event.target.value));
-              setPage(1);
-            }}
-          >
-            {[10, 25, 50, 100].map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <div className="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>No.</th>
-              {columns.map((column) => (
-                <th key={column.key}>{column.label}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.slice(offset, offset + limit).map((row, index) => (
-              <tr key={offset + index}>
-                <td>{number(offset + index + 1)}</td>
-                {columns.map((column) => (
-                  <td key={column.key}>{format(pick(row, column.key), column.type ?? 'text')}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {!filtered.length ? (
-        <p className="monitor-empty">Tidak ada data untuk pencarian ini.</p>
-      ) : null}
-      <footer className="legacy-pagination">
-        <span>
-          {number(filtered.length)} data · Halaman {number(current)} / {number(pages)}
-        </span>
-        <button className="button" disabled={current <= 1} onClick={() => setPage(current - 1)}>
-          Sebelumnya
-        </button>
-        <button className="button" disabled={current >= pages} onClick={() => setPage(current + 1)}>
-          Berikutnya
-        </button>
-      </footer>
+    <section className="panel legacy-table">
+      <DataTableView payload={rows} kind="legacy" columnDefinitions={columns} pageSize={10} />
     </section>
   );
 }

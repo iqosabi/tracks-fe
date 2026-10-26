@@ -3,7 +3,10 @@ import { useEffect, useRef } from 'react';
 import { createDataTable, type DataTable } from './index';
 import type { TablePage, ApiRecord } from '../../../core/types';
 import type { RowActions } from '../../data/presentation';
+import type { Column } from '../../data/columns';
 interface Props {
+  columnDefinitions?: Column[];
+  pageSize?: number;
   payload: unknown;
   kind: string;
   remote?: boolean;
@@ -25,6 +28,8 @@ export function DataTableView({
   actions,
   onChange,
   onAction,
+  columnDefinitions,
+  pageSize,
 }: Props) {
   const container = useRef<HTMLDivElement>(null),
     table = useRef<DataTable | null>(null);
@@ -40,6 +45,8 @@ export function DataTableView({
       kind,
       remote,
       serverSearch,
+      columnDefinitions,
+      pageSize,
       actions: actions ? (row, index) => callbacks.current.actions?.(row, index) ?? '' : undefined,
       onChange: (next) => callbacks.current.onChange?.(next),
     });
@@ -57,7 +64,7 @@ export function DataTableView({
       table.current?.destroy();
       table.current = null;
     };
-  }, [kind, remote, serverSearch, !!actions]);
+  }, [kind, remote, serverSearch, !!actions, columnDefinitions, pageSize]);
   useEffect(() => {
     table.current?.setData(payload, page);
   }, [payload, page]);

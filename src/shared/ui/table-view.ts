@@ -1,10 +1,11 @@
 import type { ApiRecord } from '../../core/types';
-import { columns } from '../data/columns';
+import { columns, type Column } from '../data/columns';
 import { items, pick } from '../data/records';
 import { format, number } from '../data/formatters';
 import { html, escape } from './html';
 export type RowActions = (row: ApiRecord, index: number) => string;
 interface TableOptions {
+  columnDefinitions?: Column[];
   actions?: RowActions;
   offset?: number;
   rowIndex?: (index: number) => number;
@@ -12,13 +13,13 @@ interface TableOptions {
 export function table(
   payload: unknown,
   kind = 'vehicles',
-  { actions, offset = 0, rowIndex = (index) => index }: TableOptions = {},
+  { actions, offset = 0, rowIndex = (index) => index, columnDefinitions }: TableOptions = {},
 ) {
   const rows = items(payload);
   if (rows === null)
     return '<div class="monitor-empty">Data belum dapat ditampilkan. Format respons perlu disesuaikan dengan kontrak backend.</div>';
   if (!rows.length) return '<div class="monitor-empty">Belum ada data untuk pilihan ini.</div>';
-  const visible = (columns[kind] || columns.vehicles).filter((c) =>
+  const visible = (columnDefinitions ?? columns[kind] ?? columns.vehicles).filter((c) =>
     rows.some((row) => pick(row, ...c.names) !== undefined),
   );
   if (!visible.length)

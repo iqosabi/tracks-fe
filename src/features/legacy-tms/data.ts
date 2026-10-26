@@ -32,6 +32,7 @@ export function mapPositions(buses: LiveBus[]) {
       longitude: position?.lon,
       status: bus.operationalStatus,
       speedKmh: bus.speed,
+      bearingDegrees: bus.heading,
       deviceTimestamp: bus.deviceTime,
       receivedAt: bus.serverTime,
     };

@@ -13,7 +13,7 @@ export const resources = {
   menus: { title: 'Daftar menu', path: '/menus', group: 'Administrasi' },
 } as const;
 export type ResourceId = keyof typeof resources;
-export type LegacyPage = ResourceId | 'map';
+export type LegacyPage = ResourceId | 'map' | 'account';
 export const envelopeSchema = z.object({
   success: z.boolean(),
   metadata: z.unknown().optional(),

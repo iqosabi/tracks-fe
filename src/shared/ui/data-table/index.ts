@@ -1,4 +1,5 @@
 import { html } from '../html';
+import type { Column } from '../../data/columns';
 import type { ApiRecord, TablePage, Disposable } from '../../../core/types';
 import type { RowActions } from '../../data/presentation';
 import { paginationMeta } from '../../data/pagination';
@@ -6,14 +7,19 @@ export { paginationMeta } from '../../data/pagination';
 import { query as domQuery } from '../dom';
 import { table, items, columns, pick, format, number, escape } from '../../data/presentation';
 
-export function filterReadableRows(rows: ApiRecord[], kind: string, query: string) {
+export function filterReadableRows(
+  rows: ApiRecord[],
+  kind: string,
+  query: string,
+  columnDefinitions?: Column[],
+) {
   const needle = query.trim().toLocaleLowerCase('id-ID');
   return rows
     .map((row, index) => ({ row, index }))
     .filter(
       ({ row }) =>
         !needle ||
-        (columns[kind] || columns.vehicles).some((c) =>
+        (columnDefinitions ?? columns[kind] ?? columns.vehicles).some((c) =>
           String(format(pick(row, ...c.names), c.type))
             .toLocaleLowerCase('id-ID')
             .includes(needle),
@@ -21,6 +27,7 @@ export function filterReadableRows(rows: ApiRecord[], kind: string, query: strin
     );
 }
 interface DataTableOptions {
+  columnDefinitions?: Column[];
   element: HTMLElement;
   kind?: string;
   remote?: boolean;
@@ -47,6 +54,7 @@ export function createDataTable({
   actions,
   onRender = () => {},
   label = 'Cari data',
+  columnDefinitions,
 }: DataTableOptions): DataTable {
   let payload: unknown = { items: [] };
   let page = 1,
@@ -92,7 +100,12 @@ export function createDataTable({
     info = domQuery('.table-info', element),
     pages = domQuery('.table-pages', element);
   const selection = () =>
-    filterReadableRows(items(payload) || [], kind, remote && serverSearch ? '' : query);
+    filterReadableRows(
+      items(payload) || [],
+      kind,
+      remote && serverSearch ? '' : query,
+      columnDefinitions,
+    );
   function draw() {
     if (disposed) return;
     const all = items(payload),
@@ -119,7 +132,7 @@ export function createDataTable({
         : table(
             visible.map((x) => x.row),
             kind,
-            { actions, offset, rowIndex: (index) => visible[index].index },
+            { actions, offset, rowIndex: (index) => visible[index].index, columnDefinitions },
           );
     body.querySelectorAll<HTMLButtonElement>('button[data-action]').forEach((button) => {
       button.disabled = busy;

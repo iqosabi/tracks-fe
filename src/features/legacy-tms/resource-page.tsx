@@ -32,11 +32,11 @@ export function LegacyStats({
   labels: Record<string, string>;
 }) {
   return (
-    <section className="legacy-stats">
+    <section className="stats live-stats">
       {Object.entries(labels).map(([key, label]) => (
-        <article key={key}>
-          <span>{label}</span>
-          <strong>{number(values[key], 2)}</strong>
+        <article className="stat-card" key={key}>
+          <span className="stat-label">{label}</span>
+          <strong className="stat-number">{number(values[key], 2)}</strong>
         </article>
       ))}
     </section>

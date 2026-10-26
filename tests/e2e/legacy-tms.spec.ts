@@ -56,8 +56,14 @@ test('legacy workspace consumes captured modules and isolates CMS session', asyn
   expect(old.headers()['content-security-policy']).toContain('https://api-tms.aestaworks.com');
   expect((await request.get('/old/')).status()).toBe(200);
   await page.goto('/old');
-  await expect(page.getByRole('heading', { name: 'Masuk ke TMS' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Selamat datang kembali.' })).toBeVisible();
   expect(calls).toEqual([]);
+  await expect(page.locator('.login-story')).toBeVisible();
+  await expect(page.locator('.login-form')).toBeVisible();
+  await expect
+    .poll(() => page.locator('.city-map').evaluate((el) => (el as HTMLImageElement).naturalWidth))
+    .toBeGreaterThan(0);
+  await page.screenshot({ path: testInfo.outputPath('legacy-login.png') });
   await expect(page.locator('[name=accessToken]')).toHaveCount(0);
   await expect(page.locator('[name=email]')).toHaveValue('');
   await page.locator('[name=email]').fill('operator@example.test');
@@ -67,17 +73,17 @@ test('legacy workspace consumes captured modules and isolates CMS session', asyn
   await page.getByRole('button', { name: 'Sembunyikan password' }).click();
   await page.getByRole('button', { name: 'Masuk ke TMS', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Email atau password tidak valid');
-  await expect(page.locator('.legacy-workspace')).toHaveCount(0);
+  await expect(page.locator('.workspace')).toHaveCount(0);
   await page.getByRole('button', { name: 'Masuk ke TMS', exact: true }).click();
   await expect(page.getByTestId('loading-popup')).toBeVisible();
   releaseLive();
   await expect(page.getByRole('heading', { name: 'Data bus', exact: true })).toBeVisible();
-  await expect(page.locator('.legacy-header')).toContainText('Pengguna contoh');
+  await expect(page.locator('#profile')).toContainText('Pengguna contoh');
   await expect(page.locator('[name=password]')).toHaveCount(0);
   await expect(page.getByTestId('loading-popup')).toHaveCount(0);
   const buses = page.locator('.legacy-table').last();
   await expect(buses.locator('tbody tr')).toHaveCount(10);
-  await buses.getByRole('button', { name: 'Berikutnya' }).click();
+  await buses.getByRole('button', { name: 'Halaman berikutnya' }).click();
   await expect(buses.locator('tbody tr').first().locator('td').first()).toHaveText('11');
   await buses.getByRole('searchbox').fill('BUS-024');
   await expect(buses.locator('tbody tr')).toHaveCount(1);
@@ -93,24 +99,34 @@ test('legacy workspace consumes captured modules and isolates CMS session', asyn
     ['Menu akses saya', 'Operasional contoh'],
     ['Daftar menu', 'Operasional contoh'],
   ];
-  for (const [module, text] of checks) {
-    await page
+  const navigate = async (module: string) => {
+    const button = page
       .getByRole('navigation', { name: 'Modul TMS' })
-      .getByRole('button', { name: module, exact: true })
-      .click();
-    await expect(page.locator('.legacy-main tbody')).toContainText(text);
+      .locator('button')
+      .filter({ hasText: new RegExp('^' + module + '$') });
+    const group = button.locator('xpath=ancestor::details');
+    if (!(await group.evaluate((el) => (el as HTMLDetailsElement).open)))
+      await group.locator('summary').click();
+    await button.click();
+  };
+  for (const [module, text] of checks) {
+    await navigate(module);
+    await expect(page.locator('.content tbody')).toContainText(text);
   }
   forbidden = true;
-  await page.getByRole('button', { name: 'Muat ulang' }).click();
+  await page.getByRole('button', { name: 'Perbarui', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('tidak memiliki akses');
-  await expect(page.locator('.legacy-main tbody')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Peta armada', exact: true }).click();
+  await expect(page.locator('.content tbody')).toHaveCount(0);
+  await navigate('Peta armada');
   await expect(page.locator('.fleet-map-marker')).toHaveCount(24);
-  await page.getByRole('searchbox', { name: 'Cari bus TMS' }).fill('BUS-024');
+  await expect(page.locator('.workspace')).toHaveClass(/page-map/);
+  expect(calls).not.toContain('GET /monitoring/vehicles');
+  await expect(page.locator('.map-controls')).toBeVisible();
+  await page.getByRole('searchbox', { name: 'Cari bus di peta' }).fill('BUS-024');
   await page.locator('.map-search-results').getByRole('button', { name: 'BUS-024' }).click();
   await expect(page.locator('.floating-bus-card')).toContainText('BUS-024');
   await expect(page.locator('.floating-bus-card')).toContainText('1 Detik');
-  await expect(page.locator('.floating-bus-card')).toContainText('24 km/j');
+  await expect(page.locator('.floating-bus-card')).toContainText('24 KM/J');
   const marker = page.locator('.fleet-map-marker[title=BUS-024] .bus-marker-symbol');
   const before = await marker.evaluate((el) => el.getBoundingClientRect().width);
   await page.locator('.leaflet-control-zoom-in').click();
@@ -118,12 +134,12 @@ test('legacy workspace consumes captured modules and isolates CMS session', asyn
     .poll(() => marker.evaluate((el) => el.getBoundingClientRect().width))
     .toBeGreaterThan(before);
   await page.getByRole('button', { name: 'Light', exact: true }).click();
-  await expect(page.locator('.legacy-map')).toHaveClass(/map-theme-light/);
+  await expect(page.locator('.reference-map')).toHaveClass(/map-theme-light/);
   await page.screenshot({ path: testInfo.outputPath('legacy-desktop.png') });
-  await page.getByRole('button', { name: 'Tutup sidebar TMS' }).click();
-  await expect(page.getByRole('navigation', { name: 'Modul TMS' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Tutup navigasi', exact: true }).click();
+  await expect(page.getByRole('navigation', { name: 'Modul TMS' })).not.toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('searchbox', { name: 'Cari bus TMS' }).fill('BUS-024');
+  await page.getByRole('searchbox', { name: 'Cari bus di peta' }).fill('BUS-024');
   await page.locator('.map-search-results').getByRole('button', { name: 'BUS-024' }).click();
   await page.screenshot({ path: testInfo.outputPath('legacy-mobile.png') });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -137,9 +153,10 @@ test('legacy workspace consumes captured modules and isolates CMS session', asyn
   expect(calls.filter((call) => call.startsWith('GET ')).map((call) => call.slice(4))).toEqual(
     expect.arrayContaining(Object.keys(tmsFixtures)),
   );
-  await page.getByRole('button', { name: 'Buka sidebar TMS' }).click();
+  await page.getByRole('button', { name: 'Buka navigasi', exact: true }).click();
+  await page.getByRole('button', { name: 'Buka profil akun' }).click();
   await page.getByRole('button', { name: 'Keluar dari TMS' }).click();
-  await expect(page.getByRole('heading', { name: 'Masuk ke TMS' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Selamat datang kembali.' })).toBeVisible();
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Masuk ke workspace' })).toBeVisible();
   expect(errors).toEqual([]);

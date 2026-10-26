@@ -1,17 +1,39 @@
-import { useState } from 'react';
-import { Icon } from '../../app/shell';
+import { useEffect, useRef, useState } from 'react';
+import { Icon } from '../../shared/ui/icon';
 import { messageOf } from '../../shared/data/guards';
 interface Props {
   restoring: boolean;
   message: string;
   onLogin: (username: string, password: string) => Promise<void>;
-  onDemo: () => void;
-  onConfigure: () => void;
+  onDemo?: () => void;
+  onConfigure?: () => void;
+  identity?: 'username' | 'email';
+  submitLabel?: string;
+  authLabel?: string;
+  backHref?: string;
 }
-export function LoginPage({ restoring, message, onLogin, onDemo, onConfigure }: Props) {
+export function LoginPage({
+  restoring,
+  message,
+  onLogin,
+  onDemo,
+  onConfigure,
+  identity = 'username',
+  submitLabel = 'Masuk ke workspace',
+  authLabel = 'CMS',
+  backHref,
+}: Props) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [visible, setVisible] = useState(false);
+  const submitting = useRef(false),
+    mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   return (
     <main className="login">
       <section className="login-story">
@@ -61,26 +83,38 @@ export function LoginPage({ restoring, message, onLogin, onDemo, onConfigure }: 
           ) : null}
           <form
             id="login-form"
+            aria-busy={busy || restoring}
             onSubmit={(event) => {
               event.preventDefault();
-              const data = new FormData(event.currentTarget);
+              if (submitting.current || restoring) return;
+              submitting.current = true;
+              const form = event.currentTarget,
+                data = new FormData(form);
               setBusy(true);
               setError('');
               void onLogin(
-                String(data.get('username') ?? '').trim(),
+                String(data.get(identity) ?? '').trim(),
                 String(data.get('password') ?? ''),
               )
-                .catch((reason: unknown) => setError(messageOf(reason)))
-                .finally(() => setBusy(false));
+                .then(() => form.reset())
+                .catch((reason: unknown) => {
+                  if (mounted.current) setError(messageOf(reason));
+                })
+                .finally(() => {
+                  submitting.current = false;
+                  if (mounted.current) setBusy(false);
+                });
             }}
           >
             <label className="field">
-              Username
+              {identity === 'email' ? 'Email' : 'Username'}
               <input
-                name="username"
+                name={identity}
+                type={identity === 'email' ? 'email' : 'text'}
+                disabled={busy || restoring}
                 autoComplete="username"
                 required
-                placeholder="Masukkan username"
+                placeholder={identity === 'email' ? 'Masukkan email' : 'Masukkan username'}
               />
             </label>
             <div className="password-wrap">
@@ -91,6 +125,7 @@ export function LoginPage({ restoring, message, onLogin, onDemo, onConfigure }: 
                   type={visible ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
+                  disabled={busy || restoring}
                   placeholder="Masukkan password"
                 />
               </label>
@@ -106,22 +141,33 @@ export function LoginPage({ restoring, message, onLogin, onDemo, onConfigure }: 
             </div>
             <div className="login-note">
               <Icon name="shield" />
-              Sesi aman dengan autentikasi CMS
+              Sesi aman dengan autentikasi {authLabel}
             </div>
             <button className="button primary full" type="submit" disabled={busy || restoring}>
-              {busy || restoring ? 'Menghubungkan…' : 'Masuk ke workspace'}
+              {busy || restoring ? 'Menghubungkan…' : submitLabel}
             </button>
           </form>
-          <div className="divider">
-            <span>atau jelajahi terlebih dahulu</span>
-          </div>
-          <button id="demo" className="button secondary full" onClick={onDemo}>
-            Buka workspace demo <Icon name="arrow" />
-          </button>
-          <button id="configure" className="text-button" onClick={onConfigure}>
-            <Icon name="settings" />
-            Konfigurasi koneksi API
-          </button>
+          {onDemo ? (
+            <>
+              <div className="divider">
+                <span>atau jelajahi terlebih dahulu</span>
+              </div>
+              <button id="demo" className="button secondary full" onClick={onDemo}>
+                Buka workspace demo <Icon name="arrow" />
+              </button>
+            </>
+          ) : null}
+          {onConfigure ? (
+            <button id="configure" className="text-button" onClick={onConfigure}>
+              <Icon name="settings" />
+              Konfigurasi koneksi API
+            </button>
+          ) : null}
+          {backHref ? (
+            <a className="text-button" href={backHref}>
+              Kembali ke Tracks Monitor <Icon name="arrow" />
+            </a>
+          ) : null}
           <p className="login-footnote">Akses mengikuti role dan operator akun Anda.</p>
         </div>
         <footer>© {new Date().getFullYear()} Ananda Makmur Jaya</footer>

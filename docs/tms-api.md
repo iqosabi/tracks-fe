@@ -1,6 +1,6 @@
 # Legacy TMS integration (`/old`)
 
-`http://localhost:5173/old` consumes the legacy TMS API. `/` continues to use the existing Tracks Monitor CMS API and its existing authentication. The two workspaces do not share tokens, storage, auth clients, or API configuration.
+`http://localhost:5173/old` consumes the legacy TMS API. `/` continues to use the existing Tracks Monitor CMS API and its existing authentication. The two workspaces do not share tokens, auth clients, or API configuration. They reuse the same login, workspace shell, cards, data-table engine and full-map view to keep the visual design identical; non-sensitive sidebar/theme preferences use the shared preference mechanism.
 
 ## Evidence and limits
 
@@ -72,7 +72,7 @@ The resource registry accepts only the eight captured successful paths; no arbit
 ## Data mapping
 
 - Live: `data.summary`, `totalOperators`, `source`, `scope`, `operatorCode`, `generatedAt`, and `byOperator[].{operatorCode,summary,buses}`. Bus identity is operator code plus `busId`. Fields such as `token`, IMEI, raw database IDs, and device unique IDs are excluded from the UI.
-- Map: valid `activePosition.{lat,lon}` falls back to valid `lastPosition`; missing/invalid GPS is excluded, while numeric zero remains valid. Label is `busCode → vehicleNumber → busId`. Speed uses `speed` as exposed by TMS, time uses `deviceTime`, and delay is nonnegative `serverTime - deviceTime`; missing/invalid times display `—`. Delay is transport timestamp difference, not an inferred route delay.
+- Map: positions come only from authorized `/fleets/live-status` and `/fleets` responses, fetched concurrently. Live GPS/speed/time are primary; master bus labels enrich matching operator + bus identities without crossing operators or duplicating markers. If a live position is unavailable, valid master `lastGpsLat`/`lastGpsLng` is shown with `lastGpsAt`, unknown speed and unknown receive delay. Master-only buses with GPS are included. If one source fails, the other remains usable with an explicit notice; both failures surface an error. No stations/corridors/CMS endpoints supply bus markers. Valid live `activePosition.{lat,lon}` falls back to valid `lastPosition`; missing/invalid GPS is excluded, while numeric zero remains valid. Label is `busCode → vehicleNumber → busId`. Speed uses `speed` as exposed by TMS, time uses `deviceTime`, and delay is nonnegative `serverTime - deviceTime`; missing/invalid times display `—`. Delay is transport timestamp difference, not an inferred route delay.
 - Map polls every 15 seconds while visible, preserves zoom, scales bus markers with zoom, and focuses the selected bus. Dark/Light use the existing CARTO map component and key. Only the selected bus gets a floating telemetry panel. No overspeed threshold is fabricated: the observed response has neither an overspeed flag nor a speed limit.
 - Master armada: code, plate, type, operational/device state, readable operator/corridor/device description, activity/GPS timestamps, distance, creation/update dates.
 - Halte: name, coordinates, radius, station text, audio filename, readable `usedIn` corridor names/codes. Download URLs are not executed or fetched automatically.
@@ -93,10 +93,15 @@ The production server explicitly serves the SPA at `/old` and `/old/`, and its C
 - `client.ts`: transport, in-memory session, bounded refresh retry, cancellation.
 - `data.ts`: pure mapping and menu flattening.
 - `login-page.tsx`: email/password form, pending/error states, password visibility and cancellation.
-- `application.tsx`: separate authenticated workspace, collapsible sidebar and module navigation.
-- `resource-page.tsx`, `table.tsx`: fetching, readable presentation, local search/pagination.
-- `map-page.tsx`: live map, filters, selected telemetry, focus and theme.
+- `application.tsx`: separate authenticated TMS session and module registry, rendered through the same `WorkspaceShell` used by CMS.
+- `resource-page.tsx`, `table.tsx`: fetching, readable column definitions and shared `DataTableView` local search/pagination.
+- `map-api.ts`: fleet/live loading, operator-scoped bus enrichment and GPS fallback.
+- `map-page.tsx`: TMS data provider for the shared `FleetMapView` (filters, selected telemetry, focus, theme and zoom).
 - `tests/fixtures/tms.ts`: synthetic data with observed shapes; no recorded production values.
 - Unit tests cover login payload/validation/errors/cancellation, refresh concurrency, errors, session disposal, loading release, GPS fallbacks, timestamps, private-field exclusion and nested menus. Browser tests cover failed/successful email/password login, `/old`, all eight read endpoints, table search/pagination, map selection/zoom, session separation, forbidden responses, and `/` regression. These are mocked contract tests, not live authentication or live CORS validation.
 
 For additional modules or logout revocation, provide successful request/response contracts with secrets removed. The failing `/users` route cannot establish a users API contract.
+
+## Shared visual components
+
+`features/auth/login-page.tsx` supports username (CMS) or email (TMS) with the same two-column branded login layout. `shared/ui/workspace-shell.tsx` renders the same responsive sidebar, parent/child groups, burger, brand/header, profile entry, content heading and footer for both workspaces. Role filtering remains in the CMS wrapper; TMS permissions remain enforced by its backend, without mapping TMS roles to CMS roles. `features/maps/fleet-map-view.tsx` owns the common full-screen CARTO layout and interactions; each workspace keeps its own API provider and auth client. TMS tables pass explicit readable column definitions to the existing table engine; no second pagination or table skin is maintained.

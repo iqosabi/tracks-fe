@@ -4,6 +4,8 @@ import { liveSchema } from '../../src/features/legacy-tms/contract';
 import { liveRows, mapPositions, menuRows } from '../../src/features/legacy-tms/data';
 import { tmsFixtures, tmsLoginFixture } from '../fixtures/tms';
 import { activityStore } from '../../src/core/activity/store';
+import { fleetMapPositions, loadTmsMap } from '../../src/features/legacy-tms/map-api';
+import { rowsSchema } from '../../src/features/legacy-tms/contract';
 
 const response = (data: unknown, status = 200) =>
   Response.json({ success: true, metadata: {}, data }, { status });
@@ -147,6 +149,98 @@ describe('isolated legacy TMS transport', () => {
   });
 });
 describe('TMS adapters', () => {
+  it('uses live GPS/speed/time and operator-scoped master bus labels without duplicate markers', () => {
+    const live = liveSchema.parse(tmsFixtures['/fleets/live-status']);
+    const [master] = rowsSchema.parse(tmsFixtures['/fleets']);
+    const positions = fleetMapPositions(live, [
+      { ...master, id: 'BUS-001', code: 'FLEET-ONE', lastGpsLat: 0, lastGpsLng: 0 },
+    ]);
+    expect(positions).toHaveLength(24);
+    expect(positions[0]).toMatchObject({
+      label: 'FLEET-ONE',
+      lat: expect.closeTo(-6.201, 6),
+      lng: 106.801,
+      speed: 1,
+      delayMs: 1333,
+      heading: 90,
+    });
+  });
+  it('falls back to master GPS with its own timestamp and unknown speed/delay', () => {
+    const live = liveSchema.parse(tmsFixtures['/fleets/live-status']);
+    const bus = live.byOperator[0].buses[0];
+    live.byOperator[0].buses = [{ ...bus, activePosition: null, lastPosition: null }];
+    const [master] = rowsSchema.parse(tmsFixtures['/fleets']);
+    const result = fleetMapPositions(live, [
+      { ...master, id: bus.busId, lastGpsLat: 0, lastGpsLng: 0, lastGpsAt: '2026-10-26T00:00:00Z' },
+    ]);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      lat: 0,
+      lng: 0,
+      speed: null,
+      delayMs: null,
+      busTime: '2026-10-26T00:00:00Z',
+    });
+  });
+  it('never joins another operator bus or invents a missing location', () => {
+    const live = liveSchema.parse(tmsFixtures['/fleets/live-status']);
+    const [master] = rowsSchema.parse(tmsFixtures['/fleets']);
+    expect(
+      fleetMapPositions(live, [
+        { ...master, id: 'BUS-001', code: 'WRONG', operator: { code: 'OTHER' } },
+      ])[0].label,
+    ).toBe('BUS-001');
+    expect(fleetMapPositions(null, [master])).toEqual([]);
+    expect(fleetMapPositions(null, [{ ...master, lastGpsLat: 91, lastGpsLng: 0 }])).toEqual([]);
+  });
+  it('loads only fleet/live endpoints and tolerates either source being unavailable', async () => {
+    for (const failed of ['/fleets', '/fleets/live-status']) {
+      const fetcher = vi.fn<typeof fetch>().mockImplementation(async (url) => {
+        const path = new URL(String(url)).pathname.replace('/api', '');
+        if (path === failed) return new Response('', { status: 403 });
+        return response(
+          path === '/fleets'
+            ? [
+                {
+                  ...rowsSchema.parse(tmsFixtures['/fleets'])[0],
+                  lastGpsLat: -6.2,
+                  lastGpsLng: 106.8,
+                },
+              ]
+            : tmsFixtures[path],
+        );
+      });
+      const client = new TmsClient('local-test', '', fetcher);
+      const result = await loadTmsMap(client, new AbortController().signal);
+      expect(result.positions.length).toBeGreaterThan(0);
+      expect(result.notice).not.toBe('');
+      expect(fetcher.mock.calls.map(([url]) => new URL(String(url)).pathname).sort()).toEqual([
+        '/api/fleets',
+        '/api/fleets/live-status',
+      ]);
+      client.dispose();
+    }
+  });
+  it('surfaces total failure and cannot render a navigation-aborted result', async () => {
+    const denied = new TmsClient(
+      'local-test',
+      '',
+      vi.fn<typeof fetch>().mockImplementation(async () => new Response('', { status: 403 })),
+    );
+    await expect(loadTmsMap(denied, new AbortController().signal)).rejects.toMatchObject({
+      status: 403,
+    });
+    denied.dispose();
+    const abort = new AbortController();
+    abort.abort();
+    const client = new TmsClient(
+      'local-test',
+      '',
+      vi.fn<typeof fetch>().mockImplementation(async () => response([])),
+    );
+    await expect(loadTmsMap(client, abort.signal)).rejects.toThrow();
+    client.dispose();
+  });
   it('flattens operator groups, strips private fields and maps real GPS/time', () => {
     const data = liveSchema.parse(tmsFixtures['/fleets/live-status']);
     const rows = liveRows(data);
