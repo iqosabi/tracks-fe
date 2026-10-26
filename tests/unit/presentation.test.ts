@@ -33,6 +33,14 @@ test('counts and time intervals use their own units', () => {
   assert.equal(format(32, 'speed'), '32 KM/J');
   assert.match(date('2026-10-24T06:00:00Z'), /13:00:00.000 WIB/);
 });
+test('device dates remain readable without shifting the API clock or calendar day', () => {
+  for (const zone of ['Z', '+07:00', '-05:00', '']) {
+    assert.equal(format(`2026-10-26T16:37:59.000${zone}`, 'deviceDate'), '26 Okt 2026 · 16:37:59');
+    assert.equal(format(`2026-10-26T23:59:59${zone}`, 'deviceDate'), '26 Okt 2026 · 23:59:59');
+  }
+  for (const value of [null, '', 'invalid', '2026-02-30T16:37:59Z', '2026-10-26T25:00:00Z'])
+    assert.equal(format(value, 'deviceDate'), '—');
+});
 test('durations display hours and minutes consistently for seconds and milliseconds', () => {
   assert.equal(format(125899, 'seconds'), '34 Jam 58 Menit 19 Detik');
   assert.equal(format(120, 'seconds'), '2 Menit');

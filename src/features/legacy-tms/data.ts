@@ -41,7 +41,7 @@ export function mapPositions(buses: LiveBus[]) {
   // deviceTime already carries the device clock; display it without timezone conversion.
   return busPositions(normalized, []).map((position) => ({
     ...position,
-    busTimeFormat: 'text' as const,
+    busTimeFormat: 'deviceDate' as const,
   }));
 }
 export function menuRows(rows: ApiRecord[], parent = ''): ApiRecord[] {

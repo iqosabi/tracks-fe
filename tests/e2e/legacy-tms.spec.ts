@@ -87,7 +87,7 @@ test('legacy workspace consumes captured modules and isolates CMS session', asyn
   await expect(buses.locator('tbody tr').first().locator('td').first()).toHaveText('11');
   await buses.getByRole('searchbox').fill('BUS-024');
   await expect(buses.locator('tbody tr')).toHaveCount(1);
-  await expect(buses.locator('tbody')).toContainText('2026-10-26T01:02:03.123Z');
+  await expect(buses.locator('tbody')).toContainText('26 Okt 2026 · 01:02:03');
   await expect(page.locator('body')).not.toContainText('SHOULD_NEVER_RENDER');
   await expect(page.locator('body')).not.toContainText('PRIVATE_DEVICE_ID');
   const checks = [

@@ -4,6 +4,7 @@ export type ValueFormat =
   | 'text'
   | 'bytes'
   | 'date'
+  | 'deviceDate'
   | 'boolean'
   | 'status'
   | 'number'
@@ -90,6 +91,24 @@ export function time(value: unknown): string {
   const part = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
   return `${part('hour')}:${part('minute')}:${part('second')}.${part('fractionalSecond')} WIB`;
 }
+export function deviceDate(value: unknown): string {
+  if (typeof value !== 'string') return '—';
+  const parts =
+    /^(\d{4}-\d{2}-\d{2})[T ]([0-2]\d:[0-5]\d:[0-5]\d)(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/.exec(
+      value,
+    );
+  if (!parts || Number(parts[2].slice(0, 2)) > 23) return '—';
+  // Use only the calendar date and clock supplied by the device, ignoring its zone suffix.
+  const day = validDate(`${parts[1]}T00:00:00Z`);
+  if (!day || day.toISOString().slice(0, 10) !== parts[1]) return '—';
+  const label = new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(day);
+  return `${label} · ${parts[2]}`;
+}
 export function date(value: unknown): string {
   const d = validDate(value);
   return d
@@ -131,6 +150,7 @@ export function format(value: unknown, type: ValueFormat = 'text'): string {
   if (value === null || value === undefined || value === '') return '—';
   if (type === 'bytes') return bytes(value);
   if (type === 'date') return date(value);
+  if (type === 'deviceDate') return deviceDate(value);
   if (type === 'day') {
     const d = /^\d{4}-\d{2}-\d{2}$/.test(String(value))
       ? validDate(String(value) + 'T00:00:00+07:00')
