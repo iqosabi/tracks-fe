@@ -38,7 +38,11 @@ export function mapPositions(buses: LiveBus[]) {
     };
   });
   // HAR has no overspeed flag or speed limit: do not invent an alert threshold.
-  return busPositions(normalized, []);
+  // deviceTime already carries the device clock; display it without timezone conversion.
+  return busPositions(normalized, []).map((position) => ({
+    ...position,
+    busTimeFormat: 'text' as const,
+  }));
 }
 export function menuRows(rows: ApiRecord[], parent = ''): ApiRecord[] {
   return rows.flatMap((row) => [

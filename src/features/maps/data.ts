@@ -10,6 +10,7 @@ export interface BusPosition extends FleetPosition {
   overspeed: boolean;
   speed: number | null;
   busTime: unknown;
+  busTimeFormat?: 'text' | 'date';
   delayMs: number | null;
 }
 export const defaultOfflineAfterMs = 90_000;

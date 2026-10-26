@@ -252,6 +252,8 @@ describe('TMS adapters', () => {
       label: 'BUS-001',
       speed: 1,
       delayMs: 1333,
+      busTime: '2026-10-26T01:02:03.123Z',
+      busTimeFormat: 'text',
       overspeed: false,
     });
   });

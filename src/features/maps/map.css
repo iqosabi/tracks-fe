@@ -326,8 +326,8 @@
   fill: #f4a72c;
 }
 .reference-map .map-point.selected .bus-marker-symbol {
-  outline: 3px solid #e61436;
-  outline-offset: 3px;
+  outline: 1.5px solid #e61436;
+  outline-offset: 1.5px;
 }
 .reference-map .map-point.overspeed .bus-marker-symbol {
   background: #e61436;

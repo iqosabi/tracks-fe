@@ -33,7 +33,7 @@ export const legacyColumns = {
     c('Lon terakhir', 'lastPosition.lon', 'coordinate'),
     c('Lat aktif', 'activePosition.lat', 'coordinate'),
     c('Lon aktif', 'activePosition.lon', 'coordinate'),
-    c('Time bus', 'deviceTime', 'date'),
+    c('Time bus', 'deviceTime'),
     c('Time server', 'serverTime', 'date'),
     c('Dipublikasikan', 'publishedTime', 'date'),
     c('Terakhir aktif', 'lastActive', 'date'),

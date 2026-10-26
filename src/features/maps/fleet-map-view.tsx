@@ -1,7 +1,7 @@
 import './map.css';
 import { useCallback, useMemo, useState } from 'react';
 import { readPreference, writePreference } from '../../core/config/storage';
-import { date, number, statusText } from '../../shared/data/formatters';
+import { format, number, statusText } from '../../shared/data/formatters';
 import { FleetCanvas } from './fleet-canvas';
 import { delayText, type BusPosition } from './data';
 import type { MapTheme } from './marker-layout';
@@ -18,7 +18,7 @@ function BusCard({
     ['Bus', bus.label],
     ['Lat', number(bus.lat, 6)],
     ['Lon', number(bus.lng, 6)],
-    ['Time bus', date(bus.busTime)],
+    ['Time bus', format(bus.busTime, bus.busTimeFormat ?? 'date')],
     ['Delay', delayText(bus.delayMs)],
     ['Speed', bus.speed === null ? '—' : `${number(bus.speed, 0)} KM/J`],
   ];
